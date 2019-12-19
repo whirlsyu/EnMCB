@@ -42,9 +42,9 @@ were used as the compound methylation values of Methylation Correlation Blocks.
 #Not run! Remove # to run the example.
 # require(EnMCB)
 #import exprs function
-# library(affycoretools)
+# library(SummarizedExperiment)
 # data(demo_set)
-# datamatrix<-exprs(demo_set)
+# datamatrix<-assays(demo_set)[[1]]
 #import the results sheet created by the IdenyifyMCB function
 # data(demo_MCBinformation)
 #select MCB with at least 3 CpGs.

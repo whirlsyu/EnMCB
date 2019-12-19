@@ -45,9 +45,9 @@ Currently, only illumina 450k platform is supported, the methylation profile nee
 # require(EnMCB)
 # data(demo_set)
 #import exprs function
-# library(affycoretools)
+# library(SummarizedExperiment)
 #import the demo TCGA data with 10000+ CpGs site and 455 samples
-# res<-IdentifyMCB(exprs(demo_set))
+# res<-IdentifyMCB(assays(demo_set)[[1]])
 # demo_MCBinformation<-res$MCBinformation
 
 

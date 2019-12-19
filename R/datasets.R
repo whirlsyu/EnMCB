@@ -35,4 +35,21 @@
 "demo_MCBinformation"
 
 
+#' CpGs information on Illumina Infinium Human Methylation 450K.
+#'
+#' A dataset containing the number and other attributes of all CpG information in
+#' Illumina Infinium Human Methylation 450K.
+#'
+#' @format A data frame with 94 rows and 8 variables:
+#' \describe{
+#'   \item{Composite Element REF}{CpG code}
+#'   \item{Chromosome}{Chromosome code for CpG.}
+#'   \item{Start}{Start point of CpGs in the chromosome.}
+#'   ...
+#' }
+#' @usage data(Illumina_Infinium_Human_Methylation_450K)
+"Illumina_Infinium_Human_Methylation_450K"
+
+
+
 
