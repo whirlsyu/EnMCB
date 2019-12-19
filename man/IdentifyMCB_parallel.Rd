@@ -4,9 +4,13 @@
 \alias{IdentifyMCB_parallel}
 \title{Identification of methylation correlated blocks using parallel}
 \usage{
-IdentifyMCB_parallel(MethylationProfile, method = c("pearson",
-  "spearman", "kendall")[1], CorrelationThreshold = 0.8,
-  PositionGap = 1000, platform = "Illumina Methylation 450K")
+IdentifyMCB_parallel(
+  MethylationProfile,
+  method = c("pearson", "spearman", "kendall")[1],
+  CorrelationThreshold = 0.8,
+  PositionGap = 1000,
+  platform = "Illumina Methylation 450K"
+)
 }
 \arguments{
 \item{MethylationProfile}{Methylation matrix is used in the analysis.}

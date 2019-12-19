@@ -6,14 +6,14 @@
 \title{ExpressionSet of demo dataset.}
 \format{ExpressionSet:
 \describe{
-  \item{assayData}{1020 features, 455 samples}
-  \item{phenoData}{Data descriptions.}
+  \item{assays}{10020 features, 455 samples}
+  \item{colData}{Data descriptions.}
   ...
 }}
 \usage{
 data(demo_set)
 }
 \description{
-A ExpressionSet containing the 1020 CpGs beta value of 455 samples.
+A ExpressionSet containing the 10020 CpGs beta value of 455 samples.
 }
 \keyword{datasets}

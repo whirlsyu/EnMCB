@@ -4,8 +4,7 @@
 \alias{fast_roc_calculation}
 \title{Fast calculation of AUC for ROC using parallel strategy}
 \usage{
-fast_roc_calculation(test_matrix, y_surv, predict_time = 5,
-  roc_method = "NNE")
+fast_roc_calculation(test_matrix, y_surv, predict_time = 5, roc_method = "NNE")
 }
 \arguments{
 \item{test_matrix}{Test matrix used in the analysis. Colmuns are samples, rows are markers.}

@@ -9,6 +9,6 @@
 data(demo_survival_data)
 }
 \description{
-A Surv containing the 1020 CpGs beta value of 455 samples.
+A Surv containing survival value of 455 samples.
 }
 \keyword{datasets}

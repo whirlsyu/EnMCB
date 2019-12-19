@@ -4,8 +4,14 @@
 \alias{draw_survival_curve}
 \title{draw survival curve}
 \usage{
-draw_survival_curve(exp, living_days, living_events, write_name,
-  title_name = "", threshold = NA)
+draw_survival_curve(
+  exp,
+  living_days,
+  living_events,
+  write_name,
+  title_name = "",
+  threshold = NA
+)
 }
 \arguments{
 \item{exp}{expression level for gene.}
