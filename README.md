@@ -36,15 +36,16 @@ or use our demo data.
 
 <pre>
 data(demo_set)
-eset_met<-demo_set
+
 </pre>
 
 
 Then, you can automatically run following:
 
 <pre>
-library(affycoretools)
-res<-IdentifyMCB(exprs(eset_met))
+library(SummarizedExperiment)
+
+res<-IdentifyMCB(assays(demo_set)[[1]])
 </pre>
 
 You can extract the MCB information,
