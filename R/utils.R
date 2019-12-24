@@ -39,11 +39,11 @@ test_logrank_p_in_KM<-function(mcb_matrix,y_surv){
 }
 
 
-give_me_the_sen_spc<-function(pred,print=T) {
+give_me_the_sen_spc<-function(pred,print=TRUE) {
   tpr<-(pred@tp[[1]]/(pred@tp[[1]]+pred@fn[[1]])) #sensitivity
   fpr<-(pred@fp[[1]]/(pred@tn[[1]]+pred@fp[[1]])) #specificity
   best_one<-which.min(sqrt( (1-tpr)^2+ fpr^2 ))
-  if (print == T)  cat(paste(" sensitivity:",tpr[best_one],"\n","specificity:",1-fpr[best_one],"\n"))
+  if (print == TRUE)  cat(paste(" sensitivity:",tpr[best_one],"\n","specificity:",1-fpr[best_one],"\n"))
   pred@cutoffs[[1]][best_one]#specificity
 }
 
@@ -101,43 +101,43 @@ multiple_time_ROC <- function(Test,y_surv,genesel) {
     geom_abline(slope=1, colour="black")
   ggsave(filename = paste("Time ROC of ",genesel,".jpeg",sep=""),plot = gg,device ="jpeg" ,
          path = getwd(),dpi = 300,units = "in",width = 5, height = 4.5,
-         limitsize=F)
+         limitsize=FALSE)
 }
 
 
 
 
-draw_pheatmap_matrix<-function(eSet_matrix,group,savename="draw_pheatmap_matrix",scale = F){
+draw_pheatmap_matrix<-function(eSet_matrix,group,savename="draw_pheatmap_matrix",scale = FALSE){
   requireNamespace(pheatmap)
   requireNamespace(ggplot2)
   group<-as.character(group)
   df<-as.numeric_matrix(eSet_matrix)
-  df<-df[,order(group,decreasing = T)]
-  group<-group[order(group,decreasing = T)]
+  df<-df[,order(group,decreasing = TRUE)]
+  group<-group[order(group,decreasing = TRUE)]
   df[is.na(df)]<-0
   aka2 = data.frame(ID = group)
   rownames(aka2)<-colnames(df)
   aka3 = list(ID = c('TRUE' = "blue", 'FALSE'="red"))
 
   df<-df[apply(df, 1,stats::sd)>0,]
-  if (scale == T) {
+  if (scale == TRUE) {
     df=scale(df)
   }
    gg<-pheatmap(df,
            annotation_col = aka2,
            annotation_colors = aka3[1],
            annotation_legend = FALSE,
-           show_colnames = F, show_rownames = F, cluster_rows = T,
-           cluster_cols = F, legend = TRUE,
+           show_colnames = FALSE, show_rownames = FALSE, cluster_rows = TRUE,
+           cluster_cols = FALSE, legend = TRUE,
            clustering_distance_rows = "euclidean", border_color = FALSE)
    ggplot2::ggsave(filename = paste(savename,".jpeg",sep=""),plot = gg,device ="jpeg" ,
           path = getwd(),dpi = 300,units = "in",width = 10, height = 5,
-          limitsize=F)
+          limitsize=FALSE)
 }
 
 
-give_me_the_lasso_gene<-function(cvfit,s=NULL,plot_figure=T){
-  if (plot_figure ==T) {
+give_me_the_lasso_gene<-function(cvfit,s=NULL,plot_figure=TRUE){
+  if (plot_figure ==TRUE) {
     plot(cvfit)
     # cat("min: ",cvfit$lambda.min,"\n")
     # cat("1se: ",cvfit$lambda.1se,"\n")
@@ -150,7 +150,7 @@ give_me_the_lasso_gene<-function(cvfit,s=NULL,plot_figure=T){
   Active.Coefficients <- Coefficients[Active.Index]
   #print(Active.Coefficients)
   gene_lasso<-Coefficients@Dimnames[[1]][Active.Index]
-  if (plot_figure ==T) {
+  if (plot_figure ==TRUE) {
     plot(cvfit$glmnet.fit,xvar="lambda")
   }
   list(gene_lasso=gene_lasso,Active.Coefficients=Active.Coefficients)
@@ -188,12 +188,12 @@ ROC_mutiple_clinical<-function(test_frame,y_surv,genesel="title",ntime=5){
       geom_abline(slope=1, colour="black")
     ggplot2::ggsave(filename = paste("Time ROC of ",genesel,".jpeg",sep=""),plot = gg,device ="jpeg" ,
            path = getwd(),dpi = 300,units = "in",width = 5, height = 4.5,
-           limitsize=F)
+           limitsize=FALSE)
   }
 
 ROC_threshold <- function(predict, response) {
   perf <-prediction(as.numeric(predict),as.numeric(response))
-  return(give_me_the_sen_spc(perf,print = F))
+  return(give_me_the_sen_spc(perf,print = FALSE))
 }
 
 ROCdata_save<-function(origin=NULL,perf,mark="none"){
@@ -234,7 +234,7 @@ mutiple_time_ROC <- function(Test,y_surv,genesel) {
     geom_abline(slope=1, colour="black")
   ggsave(filename = paste("Time ROC of ",genesel,".jpeg",sep=""),plot = gg,device ="jpeg" ,
          path = getwd(),dpi = 300,units = "in",width = 5, height = 4.5,
-         limitsize=F)
+         limitsize=FALSE)
 }
 
 
@@ -291,7 +291,7 @@ draw_survival_curve<-function(exp,living_days,living_events,write_name,title_nam
   )
   ggplot2::ggsave(filename = paste("survival of ",write_name,".jpeg",sep=""),plot = print(gg),device ="jpeg" ,
          path = getwd(),dpi = 300,units = "in",width = 5, height = 5,
-         limitsize=F)
+         limitsize=FALSE)
 }
 
 
