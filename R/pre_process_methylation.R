@@ -14,6 +14,9 @@
 #'@export
 #'
 #'@return Object of class \code{matrix}.
+#'@examples 
+#'demo_set<-create_demo()
+#'pre_process_methylation(demo_set,Mvalue=FALSE)
 #'
 pre_process_methylation<-function(met,Mvalue=TRUE,constant_offset=0,remove_na=TRUE,remove_percentage=30){
   threshold=remove_percentage/100
