@@ -35,7 +35,7 @@ Draw a survival curve based on survminer package. This is a wrapper function of 
 }
 \examples{
 data(demo_survival_data)
-datamatrix<-create_demo()
+demo_set<-create_demo()
 draw_survival_curve(demo_set[1,],
     living_days = demo_survival_data[,1],
     living_events =demo_survival_data[,2],
