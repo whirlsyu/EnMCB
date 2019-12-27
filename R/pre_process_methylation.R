@@ -13,16 +13,18 @@
 #'
 #'@export
 #'
-pre_process_methylation<-function(met,Mvalue=T,constant_offset=0,remove_na=T,remove_percentage=30){
+#'@return Object of class \code{matrix}.
+#'
+pre_process_methylation<-function(met,Mvalue=TRUE,constant_offset=0,remove_na=TRUE,remove_percentage=30){
   threshold=remove_percentage/100
-  flag_na<-rep(T,nrow(met))
+  flag_na<-rep(TRUE,nrow(met))
   names(flag_na)<-rownames(met)
   n<-ncol(met)
   if (remove_na) {
     for (eachrow in rownames(met)) {
       if (sum(is.na(met[eachrow,])|met[eachrow,]==1|met[eachrow,]==0)>n*threshold){
         # whole row will be removed.
-        flag_na[eachrow]<-F
+        flag_na[eachrow]<-FALSE
       }else{
         if (sum(is.na(met[eachrow,])|met[eachrow,]==1|met[eachrow,]==0)>0){
           met[eachrow,is.na(met[eachrow,])|met[eachrow,]==1|met[eachrow,]==0]<-mean(met[eachrow,(!is.na(met[eachrow,]))&met[eachrow,]!=1&met[eachrow,]!=0])

@@ -17,6 +17,9 @@ pre_process_methylation(met,Mvalue,constant_offset,remove_na,remove_percentage)
 
 \item{remove_percentage}{If precentage of NA value exceed the threshold(percentage), the whole CpG probe will be removed. Otherwise, the NA values are replaced with rowmeans.}
 }
+\value{
+Object of class \code{matrix}.
+}
 \description{
 This process is optional for the pipeline.
 This function pre-process the Beta matrix and transform the Beta value into M value.

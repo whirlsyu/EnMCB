@@ -39,9 +39,7 @@ Compound scores which calculated all CpGs within individual Methylation Correlat
 were used as the compound methylation values of Methylation Correlation Blocks.
 }
 \examples{
-#Not run! Remove # to run the example.
- require(EnMCB)
-#import exprs function
+#import datasets
 data(demo_survival_data)
 datamatrix<-create_demo()
 data(demo_MCBinformation)
@@ -50,7 +48,7 @@ demo_MCBinformation<-demo_MCBinformation[demo_MCBinformation[,"CpGs_num"]>2,]
 
 trainingset<-colnames(datamatrix) \%in\% sample(colnames(datamatrix),0.6*length(colnames(datamatrix)))
 testingset<-!trainingset
-#create the results using Cox regression. Remove # to run the example.
+#create the results using Cox regression. 
 mcb_cox_res<-metricMCB(MCBset = demo_MCBinformation,
                training_set = datamatrix[,trainingset],
                Surv = demo_survival_data[trainingset],

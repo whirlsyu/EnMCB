@@ -29,6 +29,21 @@ Object of class \code{list} with elements (XXX repesents the model you choose):
 \description{
 Method for training a stacking ensemble model for Methylation Correlation Block.
 }
+\examples{
+#import datasets
+data(demo_survival_data)
+datamatrix<-create_demo()
+data(demo_MCBinformation)
+#select MCB with at least 3 CpGs.
+demo_MCBinformation<-demo_MCBinformation[demo_MCBinformation[,"CpGs_num"]>2,]
+trainingset<-colnames(datamatrix) \%in\% sample(colnames(datamatrix),0.6*length(colnames(datamatrix)))
+select_single_one=1
+em<-ensemble_model(t(demo_MCBinformation[select_single_one,]),
+    training_set=datamatrix[,trainingset],
+    Surv_training=datamatrix[trainingset])
+
+
+}
 \references{
 Xin Yu et al. 2019 Predicting disease progression in lung adenocarcinoma patients based on methylation correlated blocks using ensemble machine learning classifiers (under review)
 }

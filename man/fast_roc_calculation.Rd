@@ -22,7 +22,6 @@ This will retrun a numeric vector contains AUC results for each row in test_matr
 This function is used to create time-dependent ROC curve from censored survival data using the Kaplan-Meier (KM) or Nearest Neighbor Estimation (NNE) method of Heagerty, Lumley and Pepe, 2000
 }
 \examples{
-require(EnMCB)
 data(demo_survival_data)
 demo_set<-create_demo()
 res<-fast_roc_calculation(demo_set[1:5,],demo_survival_data)

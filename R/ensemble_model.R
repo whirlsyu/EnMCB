@@ -19,7 +19,20 @@
 #'  }
 #' @references
 #'  Xin Yu et al. 2019 Predicting disease progression in lung adenocarcinoma patients based on methylation correlated blocks using ensemble machine learning classifiers (under review)
-#'
+#' @examples 
+#' #import datasets
+#' data(demo_survival_data)
+#' datamatrix<-create_demo()
+#' data(demo_MCBinformation)
+#' #select MCB with at least 3 CpGs.
+#' demo_MCBinformation<-demo_MCBinformation[demo_MCBinformation[,"CpGs_num"]>2,]
+#' trainingset<-colnames(datamatrix) %in% sample(colnames(datamatrix),0.6*length(colnames(datamatrix)))
+#' select_single_one=1
+#' em<-ensemble_model(t(demo_MCBinformation[select_single_one,]),
+#'     training_set=datamatrix[,trainingset],
+#'     Surv_training=datamatrix[trainingset])
+#' 
+#' 
 ensemble_model <- function(single_res, training_set, Surv_training, testing_set=NULL, Surv_testing=NULL) {
   if (dim(single_res)[1]>dim(single_res)[2]) {
     single_res<-t(as.matrix(single_res))
@@ -40,21 +53,21 @@ ensemble_model <- function(single_res, training_set, Surv_training, testing_set=
                           testing_set = related_testing,
                           Surv.new = Surv_testing,
                           Method = "cox",
-                          silent = T)
+                          silent = TRUE)
   svm<- EnMCB::metricMCB(MCBset = single_res,
                          training_set = related_training,
                          Surv = Surv_training,
                          testing_set = related_testing,
                          Surv.new = Surv_testing,
                          Method = "svm",
-                         silent = T)
+                         silent = TRUE)
   lasso<- EnMCB::metricMCB(MCBset = single_res,
                            training_set = related_training,
                            Surv = Surv_training,
                            testing_set = related_testing,
                            Surv.new = Surv_testing,
                            Method = "lasso",
-                           silent = T)
+                           silent = TRUE)
   data<-rbind(cox$MCB_cox_matrix_training,
               svm$MCB_svm_matrix_training,
               lasso$MCB_lasso_matrix_training

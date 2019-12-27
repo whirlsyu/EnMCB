@@ -14,7 +14,7 @@ make_eset<-function(matrix,pData){
   #pData<-pData[colnames(matrix),]
   matrix<-matrix[,rownames(pData)]
 
-  metadata<-data.frame(labelDescription=colnames(pData),stringsAsFactors = F)
+  metadata<-data.frame(labelDescription=colnames(pData),stringsAsFactors = FALSE)
 
   adf<-new("AnnotatedDataFrame",data=pData,varMetadata=metadata)
 

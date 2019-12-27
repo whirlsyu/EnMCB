@@ -8,13 +8,12 @@
 #' @export
 #'
 #' @examples
-#' require(EnMCB)
 #' data(demo_survival_data)
 #' demo_set<-create_demo()
 #' res<-univ_coxph(demo_set,demo_survival_data)
+#' @return Object of class \code{matrix} with results.
 #' 
-#' 
-univ_coxph <- function(dataframe,y_surv,digits=4,asnumeric=T) {
+univ_coxph <- function(dataframe,y_surv,digits=4,asnumeric=TRUE) {
 
   #
   rownames_dataframe<-rownames(dataframe)

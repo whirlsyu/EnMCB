@@ -17,9 +17,7 @@
 #' @author Xin Yu
 #' @keywords Methylation Correlation
 #' @examples
-#' #Not run! Remove # to run the example.
-#'  require(EnMCB)
-#' #import exprs function
+#' #import datasets
 #' data(demo_survival_data)
 #' datamatrix<-create_demo()
 #' data(demo_MCBinformation)
@@ -28,7 +26,7 @@
 #'
 #' trainingset<-colnames(datamatrix) %in% sample(colnames(datamatrix),0.6*length(colnames(datamatrix)))
 #' testingset<-!trainingset
-#' #create the results using Cox regression. Remove # to run the example.
+#' #create the results using Cox regression. 
 #' mcb_cox_res<-metricMCB(MCBset = demo_MCBinformation,
 #'                training_set = datamatrix[,trainingset],
 #'                Surv = demo_survival_data[trainingset],
@@ -55,14 +53,14 @@ metricMCB<-function(
   testing_set=NULL,
   Surv.new=NULL,
   Method=c("svm","cox","lasso")[1],
-  silent=F
+  silent=FALSE
   ){
   requireNamespace("stats")
   if (!silent) {
     cat("Start anaylsis, this may take a while...\n")
     show_bar=nrow(MCBset)>1
   }else{
-    show_bar=F
+    show_bar=FALSE
   }
   if (show_bar) {
     bar<-utils::txtProgressBar(min = 1,max = nrow(MCBset),char = "#",style = 3)
@@ -109,7 +107,7 @@ metricMCB<-function(
       data_used_for_training<-data.frame(t(training_set[CpGs,rz]))
       # train a svm model
       svm_model<-NULL
-      try(svm_model <- survivalsvm::survivalsvm(times ~ ., data_used_for_training, gamma.mu = 0.1,type = "regression"),silent = T)
+      try(svm_model <- survivalsvm::survivalsvm(times ~ ., data_used_for_training, gamma.mu = 0.1,type = "regression"),silent = TRUE)
       #predictions
       if (!is.null(svm_model)) {
         MCB_svm_matrix_training[mcb,]<-stats::predict(svm_model, data.frame(t(training_set[CpGs,])))$predicted
@@ -171,7 +169,7 @@ metricMCB<-function(
       data_used_for_training<-data.frame(t(training_set[CpGs,rz]))
       # train a cox model
       univ_models<-NULL
-      try(univ_models<-survival::coxph(times ~.,data=data_used_for_training),silent = T)
+      try(univ_models<-survival::coxph(times ~.,data=data_used_for_training),silent = TRUE)
       #predictions
       if (!is.null(univ_models)) {
         MCB_cox_matrix_training[mcb,]<-stats::predict(univ_models, data.frame(t(training_set[CpGs,])))
@@ -245,7 +243,7 @@ metricMCB<-function(
                                                          type.measure= "deviance"
                                                          # It uses AUC as the criterion for 10-fold cross-validation.
                                                          #foldid = 10
-      ),silent = T)
+      ),silent = TRUE)
       #predictions
       if (!is.null(lasso_model)) {
         correctional_value=1

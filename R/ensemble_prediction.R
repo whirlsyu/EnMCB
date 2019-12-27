@@ -8,6 +8,23 @@
 #' Xin Yu et al. 2019 Predicting disease progression in lung adenocarcinoma patients based on methylation correlated blocks using ensemble machine learning classifiers (under review)
 #' @export
 #' @return Object of numeric class \code{double}
+#' @examples 
+#' #import datasets
+#' data(demo_survival_data)
+#' datamatrix<-create_demo()
+#' data(demo_MCBinformation)
+#' #select MCB with at least 3 CpGs.
+#' demo_MCBinformation<-demo_MCBinformation[demo_MCBinformation[,"CpGs_num"]>2,]
+#' trainingset<-colnames(datamatrix) %in% sample(colnames(datamatrix),0.6*length(colnames(datamatrix)))
+#' testingset<-!trainingset
+#' #select one MCB
+#' select_single_one=1
+#' em<-ensemble_model(t(demo_MCBinformation[select_single_one,]),
+#'     training_set=datamatrix[,trainingset],
+#'     Surv_training=datamatrix[trainingset])
+#'
+#' em_prediction_results<-ensemble_prediction(ensemble_model = em,
+#' predition_data = datamatrix[,testingset])
 #'
 ensemble_prediction <- function(ensemble_model,predition_data) {
   predition_data<-predition_data[rownames(predition_data) %in% names(coef(ensemble_model$cox$cox_model)),]

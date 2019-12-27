@@ -33,6 +33,15 @@ This function will generate a pdf file with 300dpi which compare survival curves
 \description{
 Draw a survival curve based on survminer package. This is a wrapper function of ggsurvplot.
 }
+\examples{
+data(demo_survival_data)
+datamatrix<-create_demo()
+draw_survival_curve(demo_set[1,],
+    living_days = demo_survival_data[,1],
+    living_events =demo_survival_data[,2],
+    write_name = "demo_data" )
+
+}
 \author{
 Xin Yu
 }
