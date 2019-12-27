@@ -277,6 +277,7 @@ mutiple_time_ROC <- function(Test,y_surv,genesel) {
 #'@export
 #'@examples 
 #' data(demo_survival_data)
+#' library(survival)
 #' demo_set<-create_demo()
 #' draw_survival_curve(demo_set[1,],
 #'     living_days = demo_survival_data[,1],
