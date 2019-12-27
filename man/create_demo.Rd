@@ -12,6 +12,9 @@ This function will generate a demo data.
 \description{
 Demo matrix for methylation matrix.
 }
+\examples{
+demo_set<-create_demo()
+}
 \author{
 Xin Yu
 }

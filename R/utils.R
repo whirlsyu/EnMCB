@@ -61,6 +61,8 @@ random_matrix <- function(x) {
 #'
 #'@return This function will generate a demo data.
 #'@export
+#'@examples 
+#'demo_set<-create_demo()
 create_demo<-function(){
   utils::data(demo_data)
   rmax<-matrix(data = rnorm(length(demo_data$rownames)*length(demo_data$colnames), mean=0.5, sd=0.08),
@@ -273,6 +275,13 @@ mutiple_time_ROC <- function(Test,y_surv,genesel) {
 #'
 #'@return This function will generate a pdf file with 300dpi which compare survival curves using the Kaplan-Meier (KM) test.
 #'@export
+#'@examples 
+#' data(demo_survival_data)
+#' datamatrix<-create_demo()
+#' draw_survival_curve(demo_set[1,],
+#'     living_days = demo_survival_data[,1],
+#'     living_events =demo_survival_data[,2],
+#'     write_name = "demo_data" )
 #'
 draw_survival_curve<-function(exp,living_days,living_events,write_name,title_name="",threshold=NA){
   if (is.na(threshold)) threshold=median(exp)
@@ -283,8 +292,8 @@ draw_survival_curve<-function(exp,living_days,living_events,write_name,title_nam
                      event=living_events,
                      gene=exp,
                      group_sur=group_sur)
-  fit <- survival::survfit(Surv(time, event) ~ group_sur, data = pdata_gene)
-  data.survdiff <- survival::survdiff(Surv(time, event) ~ group_sur, data = pdata_gene)
+  fit <- survival::survfit(survival::Surv(time, event) ~ group_sur, data = pdata_gene)
+  data.survdiff <- survival::survdiff(survival::Surv(time, event) ~ group_sur, data = pdata_gene)
   p.val = 1 - stats::pchisq(data.survdiff$chisq, length(data.survdiff$n) - 1)
   if (p.val<0.00001){
     p_value="p value < 0.00001"
@@ -302,7 +311,7 @@ draw_survival_curve<-function(exp,living_days,living_events,write_name,title_nam
                         censor.alpha=0.5,palette=c("#00BFC4","#F8766D"),
                         title=paste(title_name ,"\n",p_value," HR ",round(HR,2),
                                          "(",round(up95,2) ,"-", round(low95,2),  ")",collapse = ""),
-  ggtheme=theme(title =ggplot2::element_text(size=8, face='bold'),
+  ggtheme=ggplot2::theme(title =ggplot2::element_text(size=8, face='bold'),
           panel.grid.major =ggplot2::element_blank(), panel.grid.minor = ggplot2::element_blank(),
     panel.background = ggplot2::element_blank(),axis.line = ggplot2::element_line(colour = "black"),
     legend.position=c(1,1), legend.justification=c(1,1),

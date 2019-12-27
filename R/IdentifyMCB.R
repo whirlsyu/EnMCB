@@ -22,7 +22,6 @@
 #'    \code{MCBinformation} \tab Matrix contains the information of results. \cr
 #'  }
 #' @examples
-#' require(EnMCB)
 #' demo_set<-create_demo()
 #' #import the demo TCGA data with 10000+ CpGs site and 455 samples
 #' res<-IdentifyMCB(demo_set)
@@ -66,8 +65,8 @@ IdentifyMCB<-function(
     met_x<-MethylationProfile
     met_matrix<-met_x[met_cg_allgene[,'chr'] %in% chr_id,]
     ann_matrix<-met_cg_allgene[met_cg_allgene[,'chr'] %in% chr_id,]
-    met_matrix<-met_matrix[order(as.numeric(ann_matrix[,'pos']),decreasing = F),]
-    ann_matrix<-ann_matrix[order(as.numeric(ann_matrix[,'pos']),decreasing = F),]
+    met_matrix<-met_matrix[order(as.numeric(ann_matrix[,'pos']),decreasing = FALSE),]
+    ann_matrix<-ann_matrix[order(as.numeric(ann_matrix[,'pos']),decreasing = FALSE),]
     res<-NULL
     total<-nrow(met_matrix)
     for (i in 1:total) {
@@ -100,18 +99,18 @@ IdentifyMCB<-function(
 
   MCB<-rep(NA,times=7)
   names(MCB)<-c("MCB_no","start","end","CpGs","location","chromosomes","length")
-  MCB_block=F
+  MCB_block=FALSE
   MCB_no=1
   total_res<-NULL
   for (i in 1:length(MCB_flag)) {
     flag<-MCB_flag[i]
-    if (MCB_block==F&flag=="MCB"){
+    if (MCB_block==FALSE&flag=="MCB"){
       MCB["start"] <- i
       MCB["MCB_no"] <- MCB_no
       MCB_no=MCB_no+1
-      MCB_block = T
+      MCB_block = TRUE
     }
-    if (MCB_block==T&flag=="boundary"){
+    if (MCB_block==TRUE&flag=="boundary"){
       MCB["end"] <- i
       MCB["CpGs"]<- paste(rownames(correlation_res)[as.numeric(MCB["start"]):(as.numeric(MCB["end"]))],collapse = " ")
       MCB["location"]<-paste(met_cg_allgene[as.numeric(MCB["start"]),'chr'],":",
@@ -122,7 +121,7 @@ IdentifyMCB<-function(
       MCB["length"]<-as.numeric(met_cg_allgene[as.numeric(MCB["end"]),'pos'])-
         as.numeric(met_cg_allgene[as.numeric(MCB["start"]),'pos'])
       total_res<-rbind(total_res,MCB)
-      MCB_block = F
+      MCB_block = FALSE
     }
   }
   total_res<-cbind(total_res,CpGs_num=as.numeric(total_res[,'end'])-as.numeric(total_res[,'start'])+1)
