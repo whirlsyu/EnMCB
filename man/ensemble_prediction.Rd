@@ -11,6 +11,9 @@ ensemble_prediction(ensemble_model, predition_data)
 
 \item{predition_data}{A vector, matrix, list, or data frame containing the predictions (input).}
 }
+\value{
+Object of numeric class \code{double}
+}
 \description{
 predict is a generic function for predictions from the results of stacking ensemble model fitting functions.
 The function invokes particular methods which is the ensemble model described in the reference.

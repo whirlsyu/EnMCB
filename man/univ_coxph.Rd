@@ -18,6 +18,14 @@ univ_coxph(dataframe, y_surv, digits = 4, asnumeric = T)
 \description{
 Batch test for variables using coxph
 }
+\examples{
+require(EnMCB)
+data(demo_survival_data)
+demo_set<-create_demo()
+res<-univ_coxph(demo_set,demo_survival_data)
+
+
+}
 \author{
 Xin Yu
 }

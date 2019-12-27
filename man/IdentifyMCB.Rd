@@ -41,14 +41,11 @@ two adjacent CpGs were calculated.
 Currently, only illumina 450k platform is supported, the methylation profile need to convert into matrix format.
 }
 \examples{
-#Not run! Remove # to run the example.
-# require(EnMCB)
-# data(demo_set)
-#import exprs function
-# library(SummarizedExperiment)
+require(EnMCB)
+demo_set<-create_demo()
 #import the demo TCGA data with 10000+ CpGs site and 455 samples
-# res<-IdentifyMCB(assays(demo_set)[[1]])
-# demo_MCBinformation<-res$MCBinformation
+res<-IdentifyMCB(demo_set)
+demo_MCBinformation<-res$MCBinformation
 
 
 }

@@ -22,14 +22,11 @@
 #'    \code{MCBinformation} \tab Matrix contains the information of results. \cr
 #'  }
 #' @examples
-#' #Not run! Remove # to run the example.
-#' # require(EnMCB)
-#' # data(demo_set)
-#' #import exprs function
-#' # library(SummarizedExperiment)
+#' require(EnMCB)
+#' demo_set<-create_demo()
 #' #import the demo TCGA data with 10000+ CpGs site and 455 samples
-#' # res<-IdentifyMCB(assays(demo_set)[[1]])
-#' # demo_MCBinformation<-res$MCBinformation
+#' res<-IdentifyMCB(demo_set)
+#' demo_MCBinformation<-res$MCBinformation
 #'
 #'
 #' @export
@@ -51,9 +48,9 @@ IdentifyMCB<-function(
   }
   cat("Start calculating the correlation, this may take a while...\n")
   FunctionResults<-list()
-  utils::data(Illumina_Infinium_Human_Methylation_450K,package = "EnMCB")
+  Illumina_Infinium_Human_Methylation_450K<-minfi::getAnnotation("IlluminaHumanMethylation450kanno.ilmn12.hg19")
   met_cg_allgene<-Illumina_Infinium_Human_Methylation_450K[rownames(MethylationProfile),]
-  chromosomes<-unique(met_cg_allgene[,'Chromosome'])
+  chromosomes<-unique(met_cg_allgene[,'chr'])
   chromosomes<-chromosomes[order(chromosomes)]
   res=NULL
   correlation_res<-NULL
@@ -67,10 +64,10 @@ IdentifyMCB<-function(
     }
     chr_id<-chromosomes[chr_no]
     met_x<-MethylationProfile
-    met_matrix<-met_x[met_cg_allgene[,'Chromosome'] %in% chr_id,]
-    ann_matrix<-met_cg_allgene[met_cg_allgene[,'Chromosome'] %in% chr_id,]
-    met_matrix<-met_matrix[order(as.numeric(ann_matrix[,'Start']),decreasing = F),]
-    ann_matrix<-ann_matrix[order(as.numeric(ann_matrix[,'Start']),decreasing = F),]
+    met_matrix<-met_x[met_cg_allgene[,'chr'] %in% chr_id,]
+    ann_matrix<-met_cg_allgene[met_cg_allgene[,'chr'] %in% chr_id,]
+    met_matrix<-met_matrix[order(as.numeric(ann_matrix[,'pos']),decreasing = F),]
+    ann_matrix<-ann_matrix[order(as.numeric(ann_matrix[,'pos']),decreasing = F),]
     res<-NULL
     total<-nrow(met_matrix)
     for (i in 1:total) {
@@ -78,8 +75,8 @@ IdentifyMCB<-function(
       # correlation coefficients r2 between beta values of any two CpGs positioned within
       # one kilobase (or indicated by PositionGap) of one another
       if (i+1<=total){
-        if(as.numeric(ann_matrix[i+1,'Start'])-as.numeric(ann_matrix[i,'Start'])<PositionGap &
-           ann_matrix[i+1,'Chromosome']==ann_matrix[i,'Chromosome']){
+        if(as.numeric(ann_matrix[i+1,'pos'])-as.numeric(ann_matrix[i,'pos'])<PositionGap &
+           ann_matrix[i+1,'chr']==ann_matrix[i,'chr']){
           res<-rbind(res,c(unlist(stats::cor.test(met_matrix[i,],met_matrix[i+1,],method = method))[1:5]))
         }else{
           res<-rbind(res,matrix(c(0,0,1,0,0),1,5))
@@ -117,13 +114,13 @@ IdentifyMCB<-function(
     if (MCB_block==T&flag=="boundary"){
       MCB["end"] <- i
       MCB["CpGs"]<- paste(rownames(correlation_res)[as.numeric(MCB["start"]):(as.numeric(MCB["end"]))],collapse = " ")
-      MCB["location"]<-paste(met_cg_allgene[as.numeric(MCB["start"]),'Chromosome'],":",
-                                   met_cg_allgene[as.numeric(MCB["start"]),'Start'],"-",
-                                   met_cg_allgene[as.numeric(MCB["end"]),'Chromosome'],":",
-                                   met_cg_allgene[as.numeric(MCB["end"]),'End'],collapse = "")
-      MCB["chromosomes"]<-met_cg_allgene[as.numeric(MCB["start"]),'Chromosome']
-      MCB["length"]<-as.numeric(met_cg_allgene[as.numeric(MCB["end"]),'End'])-
-        as.numeric(met_cg_allgene[as.numeric(MCB["start"]),'Start'])
+      MCB["location"]<-paste(met_cg_allgene[as.numeric(MCB["start"]),'chr'],":",
+                                   met_cg_allgene[as.numeric(MCB["start"]),'pos'],"-",
+                                   met_cg_allgene[as.numeric(MCB["end"]),'chr'],":",
+                                   met_cg_allgene[as.numeric(MCB["end"]),'pos'],collapse = "")
+      MCB["chromosomes"]<-met_cg_allgene[as.numeric(MCB["start"]),'chr']
+      MCB["length"]<-as.numeric(met_cg_allgene[as.numeric(MCB["end"]),'pos'])-
+        as.numeric(met_cg_allgene[as.numeric(MCB["start"]),'pos'])
       total_res<-rbind(total_res,MCB)
       MCB_block = F
     }

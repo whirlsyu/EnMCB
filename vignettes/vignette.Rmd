@@ -20,23 +20,13 @@ First, you need a methylation data set, currently only most common platform 'Ill
 
 You can use your own datasets,or use our demo data.
 
-```{r echo=TRUE,warning=FALSE}
-
-library(EnMCB)
-
-data(demo_set)
-
-eset_met<-demo_set
-
-```
-
-Then, you can automatically run following:
+You can automatically run following:
 
 ```{r echo=TRUE,warning=FALSE,results='asis'}
 
-library(SummarizedExperiment)
+library(EnMCB)
 
-methylation_dataset<-assays(eset_met)[[1]]
+methylation_dataset<-create_demo()
 
 res<-IdentifyMCB(methylation_dataset)
 

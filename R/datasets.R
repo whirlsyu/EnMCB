@@ -1,15 +1,16 @@
-#' ExpressionSet of demo dataset.
+#' Expression matrix of demo dataset.
 #'
-#' A ExpressionSet containing the 10020 CpGs beta value of 455 samples.
+#' A Expression matrix containing the 10020 CpGs beta value of 455 samples.
 #'
 #' @format ExpressionSet:
 #' \describe{
-#'   \item{assays}{10020 features, 455 samples}
-#'   \item{colData}{Data descriptions.}
+#'   \item{rownames}{rownames of 10020 CpG features}
+#'   \item{colnames}{colnames of 455 samples}
+#'   \item{realdata}{Real Data for demo.}
 #'   ...
 #' }
-#' @usage data(demo_set)
-"demo_set"
+#' @usage data(demo_data)
+"demo_data"
 
 
 #' Survival data of demo dataset.
@@ -34,21 +35,6 @@
 #' @usage data(demo_MCBinformation)
 "demo_MCBinformation"
 
-
-#' CpGs information on Illumina Infinium Human Methylation 450K.
-#'
-#' A dataset containing the number and other attributes of all CpG information in
-#' Illumina Infinium Human Methylation 450K.
-#'
-#' @format A data frame with 94 rows and 8 variables:
-#' \describe{
-#'   \item{Composite Element REF}{CpG code}
-#'   \item{Chromosome}{Chromosome code for CpG.}
-#'   \item{Start}{Start point of CpGs in the chromosome.}
-#'   ...
-#' }
-#' @usage data(Illumina_Infinium_Human_Methylation_450K)
-"Illumina_Infinium_Human_Methylation_450K"
 
 
 

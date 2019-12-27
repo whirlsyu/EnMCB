@@ -18,27 +18,24 @@
 #' @keywords Methylation Correlation
 #' @examples
 #' #Not run! Remove # to run the example.
-#' # require(EnMCB)
+#'  require(EnMCB)
 #' #import exprs function
-#' # library(SummarizedExperiment)
-#' # data(demo_set)
-#' # datamatrix<-assays(demo_set)[[1]]
-#' #import the results sheet created by the IdenyifyMCB function
-#' # data(demo_MCBinformation)
+#' data(demo_survival_data)
+#' datamatrix<-create_demo()
+#' data(demo_MCBinformation)
 #' #select MCB with at least 3 CpGs.
-#' # demo_MCBinformation<-demo_MCBinformation[demo_MCBinformation[,"CpGs_num"]>2,]
+#' demo_MCBinformation<-demo_MCBinformation[demo_MCBinformation[,"CpGs_num"]>2,]
 #'
-#' # trainingset<-colnames(demo_set) %in% sample(colnames(demo_set),0.6*length(colnames(demo_set)))
-#' # testingset<-!trainingset
-#' # data(demo_survival_data)
+#' trainingset<-colnames(datamatrix) %in% sample(colnames(datamatrix),0.6*length(colnames(datamatrix)))
+#' testingset<-!trainingset
 #' #create the results using Cox regression. Remove # to run the example.
-#' # mcb_cox_res<-metricMCB(MCBset = demo_MCBinformation,
-#' #               training_set = datamatrix[,trainingset],
-#' #               Surv = demo_survival_data[trainingset],
-#' #               testing_set = datamatrix[,testingset],
-#' #               Surv.new = demo_survival_data[testingset],
-#' #               Method = "cox"
-#' #               )
+#' mcb_cox_res<-metricMCB(MCBset = demo_MCBinformation,
+#'                training_set = datamatrix[,trainingset],
+#'                Surv = demo_survival_data[trainingset],
+#'                testing_set = datamatrix[,testingset],
+#'                Surv.new = demo_survival_data[testingset],
+#'                Method = "cox"
+#'                )
 #'
 #' @return Object of class \code{list} with elements (XXX will be replaced with the model name you choose):
 #'  \tabular{ll}{

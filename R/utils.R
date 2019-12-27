@@ -54,6 +54,25 @@ random_matrix <- function(x) {
   x_random
 }
 
+
+#'@title create demo matrix
+#'@author Xin Yu
+#'@description Demo matrix for methylation matrix.
+#'
+#'@return This function will generate a demo data.
+#'@export
+create_demo<-function(){
+  utils::data(demo_data)
+  rmax<-matrix(data = rnorm(length(demo_data$rownames)*length(demo_data$colnames), mean=0.5, sd=0.08),
+           nrow = length(demo_data$rownames),
+           ncol=length(demo_data$colnames),dimnames = list(demo_data$rownames,demo_data$colnames)
+           )
+  rmax[rownames(demo_data$realdata),]<-demo_data$realdata
+  rmax
+}
+
+
+
 as.numeric_matrix<-function(met_matrixf){
   met_matrixff<-matrix(as.numeric(met_matrixf),
                        nrow = NROW(met_matrixf),
