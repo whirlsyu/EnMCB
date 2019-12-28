@@ -2,6 +2,7 @@
 #' @import parallel
 #' @import stats
 #' @import survivalROC
+#' @import doParallel
 #' @import glmnet
 #' @import survivalsvm
 #' @import ggplot2

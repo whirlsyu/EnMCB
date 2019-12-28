@@ -9,6 +9,7 @@
 #' @export
 #' @return Object of numeric class \code{double}
 #' @examples 
+#' library(survival)
 #' #import datasets
 #' data(demo_survival_data)
 #' datamatrix<-create_demo()
@@ -21,7 +22,7 @@
 #' select_single_one=1
 #' em<-ensemble_model(t(demo_MCBinformation[select_single_one,]),
 #'     training_set=datamatrix[,trainingset],
-#'     Surv_training=datamatrix[trainingset])
+#'     Surv_training=demo_survival_data[trainingset])
 #'
 #' em_prediction_results<-ensemble_prediction(ensemble_model = em,
 #' predition_data = datamatrix[,testingset])

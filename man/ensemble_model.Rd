@@ -31,6 +31,7 @@ Method for training a stacking ensemble model for Methylation Correlation Block.
 }
 \examples{
 #import datasets
+library(survival)
 data(demo_survival_data)
 datamatrix<-create_demo()
 data(demo_MCBinformation)
@@ -40,7 +41,7 @@ trainingset<-colnames(datamatrix) \%in\% sample(colnames(datamatrix),0.6*length(
 select_single_one=1
 em<-ensemble_model(t(demo_MCBinformation[select_single_one,]),
     training_set=datamatrix[,trainingset],
-    Surv_training=datamatrix[trainingset])
+    Surv_training=demo_survival_data[trainingset])
 
 
 }

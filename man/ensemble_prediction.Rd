@@ -19,6 +19,7 @@ predict is a generic function for predictions from the results of stacking ensem
 The function invokes particular methods which is the ensemble model described in the reference.
 }
 \examples{
+library(survival)
 #import datasets
 data(demo_survival_data)
 datamatrix<-create_demo()
@@ -31,7 +32,7 @@ testingset<-!trainingset
 select_single_one=1
 em<-ensemble_model(t(demo_MCBinformation[select_single_one,]),
     training_set=datamatrix[,trainingset],
-    Surv_training=datamatrix[trainingset])
+    Surv_training=demo_survival_data[trainingset])
 
 em_prediction_results<-ensemble_prediction(ensemble_model = em,
 predition_data = datamatrix[,testingset])
