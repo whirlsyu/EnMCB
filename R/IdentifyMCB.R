@@ -22,7 +22,8 @@
 #'    \code{MCBinformation} \tab Matrix contains the information of results. \cr
 #'  }
 #' @examples
-#' demo_set<-create_demo()
+#' demo_set<-create_demo(model='short')
+#' 
 #' #import the demo TCGA data with 10000+ CpGs site and 455 samples
 #' res<-IdentifyMCB(demo_set)
 #' demo_MCBinformation<-res$MCBinformation
@@ -63,6 +64,9 @@ IdentifyMCB<-function(
     }
     chr_id<-chromosomes[chr_no]
     met_x<-MethylationProfile
+    if (sum(met_cg_allgene[,'chr'] %in% chr_id)<=2) {
+      next
+    }
     met_matrix<-met_x[met_cg_allgene[,'chr'] %in% chr_id,]
     ann_matrix<-met_cg_allgene[met_cg_allgene[,'chr'] %in% chr_id,]
     met_matrix<-met_matrix[order(as.numeric(ann_matrix[,'pos']),decreasing = FALSE),]

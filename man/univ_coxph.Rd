@@ -23,7 +23,7 @@ Batch test for variables using coxph
 }
 \examples{
 data(demo_survival_data)
-demo_set<-create_demo()
+demo_set<-create_demo(model='short')
 res<-univ_coxph(demo_set,demo_survival_data)
 }
 \author{

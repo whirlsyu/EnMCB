@@ -4,7 +4,10 @@
 \alias{create_demo}
 \title{create demo matrix}
 \usage{
-create_demo()
+create_demo(model = c("all", "short")[1])
+}
+\arguments{
+\item{model}{Two options, 'all' or 'short' for creating full dataset or very brief demo.}
 }
 \value{
 This function will generate a demo data.
