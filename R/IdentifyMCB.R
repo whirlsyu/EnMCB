@@ -26,8 +26,8 @@
 #' 
 #' #import the demo TCGA data with 10000+ CpGs site and 455 samples
 #' #remove # to run
-#' #res<-IdentifyMCB(demo_set)
-#' #demo_MCBinformation<-res$MCBinformation
+#' res<-IdentifyMCB(demo_set)
+#' demo_MCBinformation<-res$MCBinformation
 #'
 #'
 #' @export
@@ -59,7 +59,7 @@ IdentifyMCB<-function(
   if (length(chromosomes)>1) {
     bar<-utils::txtProgressBar(min = 1,max = length(chromosomes),char = "#",style = 3)
   }
-  for(chr_no in 1:length(chromosomes)){
+  for(chr_no in seq_along(chromosomes)){
     if (length(chromosomes)>1) {
       utils::setTxtProgressBar(bar, chr_no)
     }
@@ -74,7 +74,7 @@ IdentifyMCB<-function(
     ann_matrix<-ann_matrix[order(as.numeric(ann_matrix[,'pos']),decreasing = FALSE),]
     res<-NULL
     total<-nrow(met_matrix)
-    for (i in 1:total) {
+    for (i in seq_len(total)) {
       # To investigate whether this indeed is evident in our data, we calculated Pearson
       # correlation coefficients r2 between beta values of any two CpGs positioned within
       # one kilobase (or indicated by PositionGap) of one another
@@ -107,7 +107,7 @@ IdentifyMCB<-function(
   MCB_block=FALSE
   MCB_no=1
   total_res<-NULL
-  for (i in 1:length(MCB_flag)) {
+  for (i in seq_along(MCB_flag)) {
     flag<-MCB_flag[i]
     if (MCB_block==FALSE&flag=="MCB"){
       MCB["start"] <- i

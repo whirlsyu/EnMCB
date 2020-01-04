@@ -8,13 +8,13 @@
 \describe{
   \item{rownames}{rownames of 10020 CpG features}
   \item{colnames}{colnames of 455 samples}
-  \item{realdata}{Real Data for demo.}
-  ...
+  \item{realdata}{Real data matrix for demo.}
 }}
 \usage{
 data(demo_data)
 }
 \description{
-A Expression matrix containing the 10020 CpGs beta value of 455 samples.
+A Expression matrix containing the 10020 CpGs beta value of 455 samples in TCGA lung Adenocarcinoma dataset.
+This will call form create_demo() function.
 }
 \keyword{datasets}

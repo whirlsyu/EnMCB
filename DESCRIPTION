@@ -1,7 +1,7 @@
 Package: EnMCB
 Type: Package
 Title: Predicting Disease Progression Based on Methylation Correlated Blocks using Ensemble Models
-Version: 0.99.11
+Version: 0.99.12
 Date: 2019-10-04
 Author: Xin Yu 
 Maintainer: Xin Yu <whirlsyu@gmail.com>
@@ -26,6 +26,7 @@ Description: Creation of the correlated blocks using DNA methylation
     which combined the support vector machine and elastic-net 
     regression model, can be constructed to predict disease progression.
 License: GPL-2
-biocViews: Normalization, DNAMethylation, MethylationArray,
-LazyData: true
+BugReports: https://github.com/whirlsyu/EnMCB/issues
+biocViews: Normalization, DNAMethylation, MethylationArray, SupportVectorMachine
+LazyData: FALSE
 RoxygenNote: 7.0.2

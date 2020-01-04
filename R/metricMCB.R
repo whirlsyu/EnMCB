@@ -92,7 +92,7 @@ metricMCB<-function(
     best_auc<-0
     best_model<-NULL
     mcb_SVM_res<-NULL
-    for (mcb in 1:nrow(MCBset)) {
+    for (mcb in seq_len(nrow(MCBset))) {
       #if (nrow(MCBset)>1){}
       if (show_bar&!silent) {
         utils::setTxtProgressBar(bar, mcb)
@@ -157,7 +157,7 @@ metricMCB<-function(
     best_auc<-0
     best_model<-NULL
     mcb_cox_res<-NULL
-    for (mcb in 1:nrow(MCBset)) {
+    for (mcb in seq_len(nrow(MCBset))) {
       if (show_bar&!silent){utils::setTxtProgressBar(bar, mcb)}
       write_MCB<-c(NA,NA,NA)
       #save the mcb number
@@ -219,7 +219,7 @@ metricMCB<-function(
     best_auc<-0
     best_model<-NULL
     mcb_lasso_res<-NULL
-    for (mcb in 1:nrow(MCBset)) {
+    for (mcb in seq_len(nrow(MCBset))) {
       if (show_bar&!silent){utils::setTxtProgressBar(bar, mcb)}
       write_MCB<-c(NA,NA,NA)
       #save the mcb number

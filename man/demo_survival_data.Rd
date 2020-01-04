@@ -4,11 +4,12 @@
 \name{demo_survival_data}
 \alias{demo_survival_data}
 \title{Survival data of demo dataset.}
-\format{Surv data:}
+\format{Surv data created by Surv() function in survival package.
+This data have two unnamed arguments, they will match time and event.}
 \usage{
 data(demo_survival_data)
 }
 \description{
-A Surv containing survival value of 455 samples.
+A Surv containing survival value of 455 samples in TCGA lung Adenocarcinoma dataset.
 }
 \keyword{datasets}

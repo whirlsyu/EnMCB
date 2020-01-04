@@ -1,12 +1,22 @@
 ---
 title: "EnMCB"
 output: rmarkdown::html_vignette
+author: "Xin Yu"
+date: "`r Sys.Date()`"
 vignette: >
   %\VignetteIndexEntry{vignette}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
+## table of contents
+
+- Introduction
+- Installation
+- Session Info
+- References
+
+## Introduction
 
 This package is designed to help you to create the methylation correlated blocks using methylation profiles. A stacked ensemble of machine learning models, which combined the Cox regression, support vector regression and elastic-net regression model, can be constructed using this package^[Xin Yu et al. 2019 Predicting disease progression in lung adenocarcinoma patients based on methylation correlated blocks using ensemble machine learning classifiers (under review)]. You also can choose one of them to build DNA methylation signatures associated with disease progression.
 
@@ -15,6 +25,16 @@ Note: This package is still under developing. Some of the functions may change.
 Followings are brief insturctions for using this package:
 
 You can install and test our package by downloading source package.
+
+## Installation
+
+```{r eval=FALSE}
+if(!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("EnMCB")
+```
+
+## Useage
 
 First, you need a methylation data set, currently only most common platform 'Illumina Infinium Human Methylation 450K' is supported.
 
@@ -32,8 +52,7 @@ res<-IdentifyMCB(methylation_dataset)
 
 ```
 
-
-You can extract the MCB information,
+IdentfyMCB() function will calculated Pearson correlation coefficients between the any two CpGs. A value of Pearson correlation coefficients which under the threshold was used to identify boundaries between any two adjacent markers indicating uncorrelated methylation. Markers not separated by a boundary were combined into the MCB.You can extract the MCB information,
 
 
 ```{r echo=TRUE,warning=FALSE,results='asis'}
@@ -104,13 +123,16 @@ em_prediction_results<-ensemble_prediction(ensemble_model = em,
                     predition_data = methylation_dataset[,testingset])
 ```
 
+This function will return the single vector with risk scores predicted by ensemble model.
+
 For detailed information, you can find at our references.
 
+## Session Info
 
 ```{r echo=TRUE}
 sessionInfo()
 ```
 
-##References
+## References
 
 

@@ -18,7 +18,7 @@ univ_coxph <- function(dataframe,y_surv,digits=4,asnumeric=TRUE) {
   #
   rownames_dataframe<-rownames(dataframe)
   res_coxph<-NULL
-  for (i in 1:nrow(dataframe)) {
+  for (i in seq_len(nrow(dataframe))) {
     if (asnumeric) {
       covariates <- as.numeric(dataframe[i,])
     }else{

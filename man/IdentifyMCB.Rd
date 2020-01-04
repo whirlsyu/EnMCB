@@ -45,8 +45,8 @@ demo_set<-create_demo(model='short')
 
 #import the demo TCGA data with 10000+ CpGs site and 455 samples
 #remove # to run
-#res<-IdentifyMCB(demo_set)
-#demo_MCBinformation<-res$MCBinformation
+res<-IdentifyMCB(demo_set)
+demo_MCBinformation<-res$MCBinformation
 
 
 }

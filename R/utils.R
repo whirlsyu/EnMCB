@@ -48,7 +48,7 @@ give_me_the_sen_spc<-function(pred,print=TRUE) {
 }
 
 random_matrix <- function(x) {
-  x_random=matrix(x[sample(1:length(x),length(x))],ncol = ncol(x),nrow = nrow(x))
+  x_random=matrix(x[sample(seq_along(x),length(x))],ncol = ncol(x),nrow = nrow(x))
   rownames(x_random)<-rownames(x)
   colnames(x_random)<-colnames(x)
   x_random
@@ -89,7 +89,7 @@ as.numeric_matrix<-function(met_matrixf){
 
 makeEset<-function(met_matrix,cli_data){
   all_col<-NULL
-  for (i in 1:ncol(met_matrix)) {
+  for (i in seq_len(ncol(met_matrix))) {
     if (length(grep(pattern=tolower(colnames(met_matrix)[i]),cli_data))>0) {
       loca<-grep(pattern=tolower(colnames(met_matrix)[i]),cli_data)[1]
       col<-loca%/%nrow(cli_data)+1
@@ -195,7 +195,7 @@ plot_ROC<-function(perf){
 ROC_mutiple_clinical<-function(test_frame,y_surv,genesel="title",ntime=5){
     requireNamespace("prognosticROC") #version 0.7
     sroclong_all<-NULL
-    for (n in 1:ncol(test_frame)) {
+    for (n in seq_len(ncol(test_frame))) {
       ROC_res= survivalROC::survivalROC(Stime=y_surv[,1],
                                         status=y_surv[,2],
                                         marker =as.numeric(test_frame[,n]),

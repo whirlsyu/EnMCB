@@ -1,0 +1,15 @@
+CHANGES IN VERSION 0.99.12
+-------------------------
+
+NEW FEATURES
+
+    o Update vignettes.
+
+SIGNIFICANT USER-VISIBLE CHANGES
+
+    o Delete unused data.
+
+BUG FIXES
+
+    o Some fixes related to test functions.
+
