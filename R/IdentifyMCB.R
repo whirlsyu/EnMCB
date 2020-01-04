@@ -22,11 +22,11 @@
 #'    \code{MCBinformation} \tab Matrix contains the information of results. \cr
 #'  }
 #' @examples
-#' demo_set<-create_demo(model='short')
+#' data('demo_data',package = "EnMCB")
 #' 
 #' #import the demo TCGA data with 10000+ CpGs site and 455 samples
 #' #remove # to run
-#' res<-IdentifyMCB(demo_set)
+#' res<-IdentifyMCB(demo_data$realdata)
 #' demo_MCBinformation<-res$MCBinformation
 #'
 #'
