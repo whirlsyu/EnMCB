@@ -1,6 +1,8 @@
 ---
 title: "EnMCB"
-output: rmarkdown::html_vignette
+output: 
+  rmarkdown::html_vignette:
+    toc: true
 author: "Xin Yu"
 date: "`r Sys.Date()`"
 vignette: >
@@ -9,12 +11,6 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-## table of contents
-
-- Introduction
-- Installation
-- Session Info
-- References
 
 ## Introduction
 
