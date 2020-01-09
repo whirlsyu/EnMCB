@@ -23,8 +23,9 @@ This function is used to create time-dependent ROC curve from censored survival 
 }
 \examples{
 data(demo_survival_data)
-demo_set<-create_demo()
-res<-fast_roc_calculation(demo_set[1:5,],demo_survival_data)
+data('demo_data',package = "EnMCB")
+demo_set<-demo_data$realdata
+res<-fast_roc_calculation(demo_set[1:2,],demo_survival_data)
 
 }
 \author{

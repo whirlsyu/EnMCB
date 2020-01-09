@@ -23,7 +23,8 @@ Batch test for variables using coxph
 }
 \examples{
 data(demo_survival_data)
-demo_set<-create_demo(model='short')
+data('demo_data',package = "EnMCB")
+demo_set<-demo_data$realdata
 res<-univ_coxph(demo_set,demo_survival_data)
 }
 \author{
