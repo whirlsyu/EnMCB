@@ -38,7 +38,7 @@ You can use your own datasets,or use our demo data.
 
 You can automatically run following:
 
-```{r echo=TRUE,warning=FALSE,results='asis'}
+```{r echo=TRUE,warning=FALSE,results='hide'}
 
 library(EnMCB)
 
@@ -61,7 +61,7 @@ MCB<-res$MCBinformation
 and select some of MCBs for further modeling.
 
 
-```{r echo=TRUE,warning=FALSE,results='asis'}
+```{r echo=TRUE,warning=FALSE,results='hide'}
 
 MCB<-MCB[MCB[,"CpGs_num"]>2,]
 
