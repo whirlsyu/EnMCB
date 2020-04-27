@@ -38,7 +38,7 @@ You can use your own datasets,or use our demo data.
 
 You can automatically run following:
 
-```{r echo=TRUE,warning=FALSE,results='asis'}
+```{r echo=TRUE,warning=FALSE,results='hide'}
 
 library(EnMCB)
 
@@ -51,7 +51,7 @@ res<-IdentifyMCB(methylation_dataset)
 IdentfyMCB() function will calculated Pearson correlation coefficients between the any two CpGs. A value of Pearson correlation coefficients which under the threshold was used to identify boundaries between any two adjacent markers indicating uncorrelated methylation. Markers not separated by a boundary were combined into the MCB.You can extract the MCB information,
 
 
-```{r echo=TRUE,warning=FALSE,results='asis'}
+```{r echo=TRUE,warning=FALSE,results='hide'}
 
 MCB<-res$MCBinformation
 
@@ -61,7 +61,7 @@ MCB<-res$MCBinformation
 and select some of MCBs for further modeling.
 
 
-```{r echo=TRUE,warning=FALSE,results='asis'}
+```{r echo=TRUE,warning=FALSE,results='hide'}
 
 MCB<-MCB[MCB[,"CpGs_num"]>2,]
 
@@ -91,7 +91,7 @@ onemodel<-models$best_cox_model[[2]]
 
 Then, you can predict the risk by the model you build:
 
-```{r echo=TRUE,warning=FALSE,results='asis'}
+```{r echo=TRUE,warning=FALSE,results='hide'}
 
 prediction_results<-predict(onemodel,
                             as.data.frame(t(methylation_dataset[,testingset]))
@@ -100,7 +100,7 @@ prediction_results<-predict(onemodel,
 
 In order to build ensemble model, one may run following:
 
-```{r echo=TRUE,warning=FALSE,results='asis'}
+```{r echo=TRUE,warning=FALSE,results='hide'}
 # You can choose one of MCBs:
 select_single_one=1
 
@@ -114,7 +114,7 @@ Note that this function only can be used for single MCB only, otherwise the prec
 
 Then, you can predict the risk by the model you build:
 
-```{r echo=TRUE,warning=FALSE,results='asis'}
+```{r echo=TRUE,warning=FALSE,results='hide'}
 em_prediction_results<-ensemble_prediction(ensemble_model = em,
                     predition_data = methylation_dataset[,testingset])
 ```
