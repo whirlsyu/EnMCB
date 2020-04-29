@@ -1,7 +1,11 @@
 Package: EnMCB
 Type: Package
 Title: Predicting Disease Progression Based on Methylation Correlated Blocks using Ensemble Models
+<<<<<<< HEAD
 Version: 1.0.1
+=======
+Version: 1.1.0
+>>>>>>> upstream/master
 Date: 2019-10-04
 Author: Xin Yu 
 Maintainer: Xin Yu <whirlsyu@gmail.com>
