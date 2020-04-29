@@ -51,7 +51,7 @@ res<-IdentifyMCB(methylation_dataset)
 IdentfyMCB() function will calculated Pearson correlation coefficients between the any two CpGs. A value of Pearson correlation coefficients which under the threshold was used to identify boundaries between any two adjacent markers indicating uncorrelated methylation. Markers not separated by a boundary were combined into the MCB.You can extract the MCB information,
 
 
-```{r echo=TRUE,warning=FALSE,results='asis'}
+```{r echo=TRUE,warning=FALSE,results='hide'}
 
 MCB<-res$MCBinformation
 
