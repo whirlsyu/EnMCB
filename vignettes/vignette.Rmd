@@ -24,7 +24,7 @@ You can install and test our package by downloading source package.
 
 ## Installation
 
-```{r eval=FALSE}
+```{r eval=FALSE,warning=FALSE,results='hide'}
 if(!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 BiocManager::install("EnMCB")
