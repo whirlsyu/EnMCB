@@ -7,7 +7,7 @@ Author: Xin Yu
 Maintainer: Xin Yu <whirlsyu@gmail.com>
 Depends: R (>= 4.0)
 Encoding: UTF-8
-Imports: foreach, doParallel, parallel, stats, survivalROC, glmnet,
+Imports: foreach, doParallel, parallel, stats, survivalROC, glmnet,rms,
     survivalsvm, ggplot2, minfi, IlluminaHumanMethylation450kanno.ilmn12.hg19,
     survival, utils
 VignetteBuilder: knitr
@@ -15,7 +15,6 @@ Suggests:
     SummarizedExperiment,
     testthat,
     Biobase,
-    rms,
     survminer,
     affycoretools,
     knitr,
