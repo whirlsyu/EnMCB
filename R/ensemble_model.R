@@ -19,7 +19,7 @@
 #'  }
 #' @references
 #'  Xin Yu et al. 2019 Predicting disease progression in lung adenocarcinoma patients based on methylation correlated blocks using ensemble machine learning classifiers (under review)
-#' @examples 
+#' @examples
 #' #import datasets
 #' library(survival)
 #' data(demo_survival_data)
@@ -32,8 +32,8 @@
 #' em<-ensemble_model(t(demo_MCBinformation[select_single_one,]),
 #'     training_set=datamatrix[,trainingset],
 #'     Surv_training=demo_survival_data[trainingset])
-#' 
-#' 
+#'
+#'
 ensemble_model <- function(single_res, training_set, Surv_training, testing_set=NULL, Surv_testing=NULL) {
   if (dim(single_res)[1]>dim(single_res)[2]) {
     single_res<-t(as.matrix(single_res))
@@ -76,7 +76,7 @@ ensemble_model <- function(single_res, training_set, Surv_training, testing_set=
   rownames(data)<-c('cox','svm','lasso')
   data<-t(data)
   data_f<-as.data.frame(data)
-
+  univ_models<-NULL
   try(univ_models<-rms::cph(formula = Surv_training ~. ,data=data_f) )
   if (is.null(univ_models)) {
     stop(errorCondition("Ensemble model can't be created, please check your data..."))
