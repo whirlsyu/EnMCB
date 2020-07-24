@@ -77,7 +77,7 @@ ensemble_model <- function(single_res, training_set, Surv_training, testing_set=
   data<-t(data)
   data_f<-as.data.frame(data)
   univ_models<-NULL
-  try(univ_models<-rms::cph(formula = Surv_training ~. ,data=data_f) )
+  try(univ_models<-survival::coxph(formula = Surv_training ~. ,data=data_f) )
   if (is.null(univ_models)) {
     stop(errorCondition("Ensemble model can't be created, please check your data..."))
   }else{
