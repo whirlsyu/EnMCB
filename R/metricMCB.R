@@ -106,8 +106,7 @@ metricMCB<-function(
       CpGs<-strsplit(MCBset[mcb,'CpGs']," ")[[1]]
       data_used_for_training<-data.frame(t(training_set[CpGs,rz]))
       # train a svm model
-      svm_model<-NULL
-      try(svm_model <- survivalsvm::survivalsvm(times ~ ., data_used_for_training, gamma.mu = 0.1,type = "regression"),silent = TRUE)
+      svm_model <- tryCatch(survivalsvm::survivalsvm(times ~ ., data_used_for_training, gamma.mu = 0.1,type = "regression"),error = NULL)
       #predictions
       if (!is.null(svm_model)) {
         MCB_svm_matrix_training[mcb,]<-stats::predict(svm_model, data.frame(t(training_set[CpGs,])))$predicted
@@ -127,6 +126,8 @@ metricMCB<-function(
             best_model<-list(mcb,svm_model)
           }
         }
+      }else{
+        stop("This svmr model can not be built.")
       }
       mcb_SVM_res<-rbind(mcb_SVM_res,write_MCB)
     }
@@ -168,8 +169,7 @@ metricMCB<-function(
       CpGs<-strsplit(MCBset[mcb,'CpGs']," ")[[1]]
       data_used_for_training<-data.frame(t(training_set[CpGs,rz]))
       # train a cox model
-      univ_models<-NULL
-      try(univ_models<-survival::coxph(times ~.,data=data_used_for_training),silent = TRUE)
+      univ_models<-tryCatch(survival::coxph(times ~.,data=data_used_for_training),error = NULL)
       #predictions
       if (!is.null(univ_models)) {
         MCB_cox_matrix_training[mcb,]<-stats::predict(univ_models, data.frame(t(training_set[CpGs,])))
@@ -189,6 +189,8 @@ metricMCB<-function(
             best_model<-list(mcb,univ_models)
           }
         }
+      }else{
+        stop("This coxph model can not be built.")
       }
       mcb_cox_res<-rbind(mcb_cox_res,write_MCB)
     }
@@ -230,8 +232,7 @@ metricMCB<-function(
       CpGs<-strsplit(MCBset[mcb,'CpGs']," ")[[1]]
       data_used_for_training<-t(training_set[CpGs,rz])
       # train a lasso model
-      lasso_model<-NULL
-      try(lasso_model <- glmnet::cv.glmnet(data_used_for_training,
+      lasso_model <- tryCatch(glmnet::cv.glmnet(data_used_for_training,
                                                          times,
                                                          #cox model in lasso was used, note that here cox and lasso penalty were used.
                                                          family="cox",
@@ -243,7 +244,7 @@ metricMCB<-function(
                                                          type.measure= "deviance"
                                                          # It uses AUC as the criterion for 10-fold cross-validation.
                                                          #foldid = 10
-      ),silent = TRUE)
+      ),error = NULL)
       #predictions
       if (!is.null(lasso_model)) {
         correctional_value=1
@@ -271,6 +272,8 @@ metricMCB<-function(
             best_model<-list(mcb,lasso_model,lambda_min_corrected)
           }
         }
+      }else{
+        stop("This coxph model can not be built.")
       }
       mcb_lasso_res<-rbind(mcb_lasso_res,write_MCB)
     }

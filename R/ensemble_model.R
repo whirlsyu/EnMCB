@@ -48,27 +48,27 @@ ensemble_model <- function(single_res, training_set, Surv_training, testing_set=
   }else{
     related_testing<-NULL
   }
-  cox <- EnMCB::metricMCB(MCBset = single_res,
+  cox <- tryCatch(EnMCB::metricMCB(MCBset = single_res,
                           training_set = related_training,
                           Surv = Surv_training,
                           testing_set = related_testing,
                           Surv.new = Surv_testing,
                           Method = "cox",
-                          silent = TRUE)
-  svm<- EnMCB::metricMCB(MCBset = single_res,
+                          silent = TRUE),error = NA)
+  svm<- tryCatch(EnMCB::metricMCB(MCBset = single_res,
                          training_set = related_training,
                          Surv = Surv_training,
                          testing_set = related_testing,
                          Surv.new = Surv_testing,
                          Method = "svm",
-                         silent = TRUE)
-  lasso<- EnMCB::metricMCB(MCBset = single_res,
+                         silent = TRUE),error = NA)
+  lasso<- tryCatch(EnMCB::metricMCB(MCBset = single_res,
                            training_set = related_training,
                            Surv = Surv_training,
                            testing_set = related_testing,
                            Surv.new = Surv_testing,
                            Method = "lasso",
-                           silent = TRUE)
+                           silent = TRUE),error = NA)
   data<-rbind(cox$MCB_cox_matrix_training,
               svm$MCB_svm_matrix_training,
               lasso$MCB_lasso_matrix_training
