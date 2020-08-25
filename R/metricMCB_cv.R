@@ -86,7 +86,7 @@ metricMCB.cv<-function(
   FunctionResults<-NULL
   best_auc<-0
   best_model<-NULL
-  mcb_SVM_res<-NULL
+  mcb_model_res<-NULL
   for (mcb in seq_len(nrow(MCBset))) {
     #if (nrow(MCBset)>1){}
     if (show_bar&!silent) {
@@ -152,16 +152,18 @@ metricMCB.cv<-function(
       }
     }
     MCB_matrix[mcb,]<-MCB_matrix[mcb,order_sp]
-    write_MCB[3]<-survivalROC::survivalROC(Stime = Surv[,1],
-                                           status = Surv[,2],
-                                           marker = MCB_matrix[mcb,],
-                                           predict.time = 5,
-                                           method = "NNE",
-                                           span =0.25*length(Surv)^(-0.20))$AUC
-    mcb_SVM_res<-rbind(mcb_SVM_res,write_MCB)
+    AUC_value<-survivalROC::survivalROC(Stime = Surv[,1],
+                                        status = Surv[,2],
+                                        marker = MCB_matrix[mcb,],
+                                        predict.time = 5,
+                                        method = "NNE",
+                                        span =0.25*length(Surv)^(-0.20))$AUC
+    if (AUC_value<0.5) AUC_value = 1 - AUC_value
+    write_MCB[3]<-AUC_value
+    mcb_model_res<-rbind(mcb_model_res,write_MCB)
   }
-  colnames(mcb_SVM_res)<-c("MCB_no","CpGs","auc")
+  colnames(mcb_model_res)<-c("MCB_no","CpGs","auc")
   FunctionResults$MCB_matrix<-MCB_matrix
-  FunctionResults$auc_results<-mcb_SVM_res
+  FunctionResults$auc_results<-mcb_model_res
   return(FunctionResults)
 }
