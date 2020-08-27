@@ -112,7 +112,7 @@ metricMCB.cv<-function(
                                                  data_used_for_training,
                                                  gamma.mu = 0.1,
                                                  type = "regression"),
-                        error = function(e){print(e);return(NULL)})
+                        error = function(e){warning(paste('SVR can not be built, error occurs:', e));return(NULL)})
       }else if(Method=="cox"){
         model<-tryCatch(survival::coxph(times ~ ., 
                                         data_used_for_training),
@@ -148,18 +148,22 @@ metricMCB.cv<-function(
           MCB_matrix[mcb,rz]<-stats::predict(model,data_used_for_testing,s=lambda_min_corrected)
         }
       }else{
-        stop('Model could not be built. check your dataset.')
+        MCB_matrix[mcb,rz]<-NA
       }
     }
     MCB_matrix[mcb,]<-MCB_matrix[mcb,order_sp]
-    AUC_value<-survivalROC::survivalROC(Stime = Surv[,1],
-                                        status = Surv[,2],
-                                        marker = MCB_matrix[mcb,],
-                                        predict.time = 5,
-                                        method = "NNE",
-                                        span =0.25*length(Surv)^(-0.20))$AUC
-    if (AUC_value<0.5) AUC_value = 1 - AUC_value
-    write_MCB[3]<-AUC_value
+    if (sum(is.na(MCB_matrix[mcb,])) == 0){
+      AUC_value<-survivalROC::survivalROC(Stime = Surv[,1],
+                                          status = Surv[,2],
+                                          marker = MCB_matrix[mcb,],
+                                          predict.time = 5,
+                                          method = "NNE",
+                                          span =0.25*length(Surv)^(-0.20))$AUC
+      if (AUC_value<0.5) AUC_value = 1 - AUC_value
+      write_MCB[3]<-AUC_value
+    }else{
+      write_MCB[3]<-NA
+    }
     mcb_model_res<-rbind(mcb_model_res,write_MCB)
   }
   colnames(mcb_model_res)<-c("MCB_no","CpGs","auc")
