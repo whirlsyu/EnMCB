@@ -26,17 +26,15 @@
 #' trainingset<-colnames(datamatrix) %in% sample(colnames(datamatrix),0.6*length(colnames(datamatrix)))
 #' testingset<-!trainingset
 #' #create the results using Cox regression. 
-#' mcb_cox_res<-metricMCB(MCBset = demo_MCBinformation,
+#' mcb_cox_res<-metricMCB.cv(MCBset = demo_MCBinformation,
 #'                data_set = datamatrix,
 #'                Surv = demo_survival_data,
 #'                Method = "cox")
 #'
 #' @return Object of class \code{list} with elements (XXX will be replaced with the model name you choose):
 #'  \tabular{ll}{
-#'    \code{MCB_xxx_matrix} \tab Prediction results of model
-#'    \code{XXX_auc_results} \tab AUC results for each model. \cr
-#'    \code{best_XXX_model} \tab Model object for the model with best AUC. \cr
-#'    \code{maximum_auc} \tab Maximum AUC for the whole generated models. \cr
+#'    \code{MCB_matrix} \tab Prediction results of model
+#'    \code{auc_results} \tab AUC results for each model. \cr
 #'  }
 #' @references
 #' Xin Yu et al. 2019 Predicting disease progression in lung adenocarcinoma patients based on methylation correlated blocks using ensemble machine learning classifiers (under review)
@@ -112,7 +110,7 @@ metricMCB.cv<-function(
                                                  data_used_for_training,
                                                  gamma.mu = 0.1,
                                                  type = "regression"),
-                        error = function(e){print(e);return(NULL)})
+                        error = function(e){warning(paste('SVR can not be built, error occurs:', e));return(NULL)})
       }else if(Method=="cox"){
         model<-tryCatch(survival::coxph(times ~ ., 
                                         data_used_for_training),
@@ -148,18 +146,22 @@ metricMCB.cv<-function(
           MCB_matrix[mcb,rz]<-stats::predict(model,data_used_for_testing,s=lambda_min_corrected)
         }
       }else{
-        stop('Model could not be built. check your dataset.')
+        MCB_matrix[mcb,rz]<-NA
       }
     }
     MCB_matrix[mcb,]<-MCB_matrix[mcb,order_sp]
-    AUC_value<-survivalROC::survivalROC(Stime = Surv[,1],
-                                        status = Surv[,2],
-                                        marker = MCB_matrix[mcb,],
-                                        predict.time = 5,
-                                        method = "NNE",
-                                        span =0.25*length(Surv)^(-0.20))$AUC
-    if (AUC_value<0.5) AUC_value = 1 - AUC_value
-    write_MCB[3]<-AUC_value
+    if (sum(is.na(MCB_matrix[mcb,])) == 0){
+      AUC_value<-survivalROC::survivalROC(Stime = Surv[,1],
+                                          status = Surv[,2],
+                                          marker = MCB_matrix[mcb,],
+                                          predict.time = 5,
+                                          method = "NNE",
+                                          span =0.25*length(Surv)^(-0.20))$AUC
+      if (AUC_value<0.5) AUC_value = 1 - AUC_value
+      write_MCB[3]<-AUC_value
+    }else{
+      write_MCB[3]<-NA
+    }
     mcb_model_res<-rbind(mcb_model_res,write_MCB)
   }
   colnames(mcb_model_res)<-c("MCB_no","CpGs","auc")
