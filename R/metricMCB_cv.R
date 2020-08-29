@@ -90,7 +90,7 @@ metricMCB.cv<-function(
     if (show_bar&!silent) {
       utils::setTxtProgressBar(bar, mcb)
     }
-    write_MCB<-c(NA,NA,NA)
+    write_MCB<-rep(NA,5)
     #save the mcb number
     write_MCB[1]<-as.numeric(MCBset[mcb,'MCB_no'])
     write_MCB[2]<-MCBset[mcb,'CpGs']
@@ -157,14 +157,17 @@ metricMCB.cv<-function(
                                           predict.time = 5,
                                           method = "NNE",
                                           span =0.25*length(Surv)^(-0.20))$AUC
-      if (AUC_value<0.5) AUC_value = 1 - AUC_value
-      write_MCB[3]<-AUC_value
+      # if (AUC_value<0.5) AUC_value = 1 - AUC_value
+      # write_MCB[3]<-AUC_value
+      cindex<-survival::survConcordance(Surv ~ MCB_matrix[mcb,])
+      write_MCB[4]<-cindex$concordance
+      write_MCB[5]<-cindex$std.err
     }else{
-      write_MCB[3]<-NA
+      write_MCB[3:5]<-NA
     }
     mcb_model_res<-rbind(mcb_model_res,write_MCB)
   }
-  colnames(mcb_model_res)<-c("MCB_no","CpGs","auc")
+  colnames(mcb_model_res)<-c("MCB_no","CpGs","auc","C-index","C-index_SE")
   FunctionResults$MCB_matrix<-MCB_matrix
   FunctionResults$auc_results<-mcb_model_res
   return(FunctionResults)
