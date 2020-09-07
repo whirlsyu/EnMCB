@@ -4,7 +4,8 @@
 \name{demo_MCBinformation}
 \alias{demo_MCBinformation}
 \title{MCB information.}
-\format{A data frame with 94 rows and 8 variables:
+\format{
+A data frame with 94 rows and 8 variables:
 \describe{
   \item{MCB_no}{MCB code}
   \item{start}{Start point of this MCB in the chromosome.}
@@ -14,7 +15,8 @@
   \item{chromosomes}{the chromosome number of this MCB.}
   \item{length}{the length of bps of this MCB in the chromosome.}
   \item{CpGs_num}{number of CpG probes of this MCB.}
-}}
+}
+}
 \usage{
 data(demo_MCBinformation)
 }

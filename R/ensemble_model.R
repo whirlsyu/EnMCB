@@ -54,21 +54,21 @@ ensemble_model <- function(single_res, training_set, Surv_training, testing_set=
                           testing_set = related_testing,
                           Surv.new = Surv_testing,
                           Method = "cox",
-                          silent = TRUE),error = NA)
+                          silent = TRUE),error = function(e){NULL})
   svm<- tryCatch(EnMCB::metricMCB(MCBset = single_res,
                          training_set = related_training,
                          Surv = Surv_training,
                          testing_set = related_testing,
                          Surv.new = Surv_testing,
                          Method = "svm",
-                         silent = TRUE),error = NA)
+                         silent = TRUE),error = function(e){NULL})
   lasso<- tryCatch(EnMCB::metricMCB(MCBset = single_res,
                            training_set = related_training,
                            Surv = Surv_training,
                            testing_set = related_testing,
                            Surv.new = Surv_testing,
                            Method = "lasso",
-                           silent = TRUE),error = NA)
+                           silent = TRUE),error = function(e){NULL})
   data<-rbind(cox$MCB_cox_matrix_training,
               svm$MCB_svm_matrix_training,
               lasso$MCB_lasso_matrix_training
@@ -76,8 +76,7 @@ ensemble_model <- function(single_res, training_set, Surv_training, testing_set=
   rownames(data)<-c('cox','svm','lasso')
   data<-t(data)
   data_f<-as.data.frame(data)
-  univ_models<-NULL
-  try(univ_models<-survival::coxph(formula = Surv_training ~. ,data=data_f) )
+  univ_models<-tryCatch(survival::coxph(formula = Surv_training ~. ,data=data_f),error=function(e){NULL} )
   if (is.null(univ_models)) {
     stop(errorCondition("Ensemble model can't be created, please check your data..."))
   }else{
