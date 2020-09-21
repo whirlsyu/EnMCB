@@ -4,7 +4,7 @@
 \alias{metricMCB.cv}
 \title{Calculation of model AUC for Methylation Correlation Blocks using cross validation}
 \usage{
-metricMCB.cv(MCBset,training_set,Surv,nfold,Method,silent)
+metricMCB.cv(MCBset,data_set,Surv,nfold,Method,silent)
 }
 \arguments{
 \item{MCBset}{Methylation Correlation Block information returned by the IndentifyMCB function.}
