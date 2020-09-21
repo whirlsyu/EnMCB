@@ -5,7 +5,7 @@
 #' define the methylated pattern of multiple CpG sites within each block.
 #' Compound scores which calculated all CpGs within individual Methylation Correlation Blocks by SVM model
 #' were used as the compound methylation values of Methylation Correlation Blocks.
-#' @usage metricMCB.cv(MCBset,training_set,Surv)
+#' @usage metricMCB.cv(MCBset,training_set,Surv,nfold,Method,silent)
 #' @export
 #' @param MCBset Methylation Correlation Block information returned by the IndentifyMCB function.
 #' @param data_set methylation matrix used for training the model in the analysis.
