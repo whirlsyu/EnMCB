@@ -5,7 +5,7 @@
 #' define the methylated pattern of multiple CpG sites within each block.
 #' Compound scores which calculated all CpGs within individual Methylation Correlation Blocks by SVM model
 #' were used as the compound methylation values of Methylation Correlation Blocks.
-#' @usage metricMCB(MCBset,training_set,Surv,testing_set,Surv.new,Method,silent)
+#' @usage metricMCB.cv(MCBset,training_set,Surv)
 #' @export
 #' @param MCBset Methylation Correlation Block information returned by the IndentifyMCB function.
 #' @param data_set methylation matrix used for training the model in the analysis.
@@ -33,7 +33,7 @@
 #'
 #' @return Object of class \code{list} with elements (XXX will be replaced with the model name you choose):
 #'  \tabular{ll}{
-#'    \code{MCB_matrix} \tab Prediction results of model
+#'    \code{MCB_matrix} \tab Prediction results of model. \cr
 #'    \code{auc_results} \tab AUC results for each model. \cr
 #'  }
 #' @references

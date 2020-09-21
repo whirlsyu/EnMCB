@@ -4,8 +4,10 @@
 \name{demo_survival_data}
 \alias{demo_survival_data}
 \title{Survival data of demo dataset.}
-\format{Surv data created by Surv() function in survival package.
-This data have two unnamed arguments, they will match time and event.}
+\format{
+Surv data created by Surv() function in survival package.
+This data have two unnamed arguments, they will match time and event.
+}
 \usage{
 data(demo_survival_data)
 }
