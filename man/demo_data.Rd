@@ -4,12 +4,14 @@
 \name{demo_data}
 \alias{demo_data}
 \title{Expression matrix of demo dataset.}
-\format{ExpressionSet:
+\format{
+ExpressionSet:
 \describe{
   \item{rownames}{rownames of 10020 CpG features}
   \item{colnames}{colnames of 455 samples}
   \item{realdata}{Real data matrix for demo.}
-}}
+}
+}
 \usage{
 data(demo_data)
 }
