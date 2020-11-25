@@ -1,7 +1,7 @@
 #' Expression matrix of demo dataset.
 #' @description 
 #' A Expression matrix containing the 10020 CpGs beta value of 455 samples in TCGA lung Adenocarcinoma dataset.
-#' This will call form create_demo() function.
+#' This will call from create_demo() function.
 #' @format ExpressionSet:
 #' \describe{
 #'   \item{rownames}{rownames of 10020 CpG features}

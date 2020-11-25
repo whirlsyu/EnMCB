@@ -3,8 +3,8 @@
 #' @description To enable quantitative analysis of the methylation patterns
 #' within individual Methylation Correlation Blocks across many samples, a single metric to
 #' define the methylated pattern of multiple CpG sites within each block.
-#' Compound scores which calculated all CpGs within individual Methylation Correlation Blocks by SVM model
-#' were used as the compound methylation values of Methylation Correlation Blocks.
+#' Compound scores which calculated all CpGs within individual Methylation Correlation Blocks by linear, SVM or elastic-net model
+#' Predict values were used as the compound methylation values of Methylation Correlation Blocks.
 #' @usage metricMCB(MCBset,training_set,Surv,testing_set,Surv.new,Method,silent)
 #' @export
 #' @param training_set methylation matrix used for training the model in the analysis.
@@ -12,7 +12,7 @@
 #' @param MCBset Methylation Correlation Block information returned by the IndentifyMCB function.
 #' @param Surv Survival function contain the survival information for training.
 #' @param Surv.new Survival function contain the survival information for testing.
-#' @param Method model used to calculate the compound values for multiple Methylation correlation blocks. Options include "svm" "cox" and "lasso". The default option is SVM method.
+#' @param Method model used to calculate the compound values for multiple Methylation correlation blocks. Options include "svm" "cox" and "eNet". The default option is SVM method.
 #' @param silent Ture indicates that processing information and progress bar will be shown.
 #' @author Xin Yu
 #' @keywords Methylation Correlation

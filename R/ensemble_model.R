@@ -76,7 +76,7 @@ ensemble_model <- function(single_res, training_set, Surv_training, testing_set=
   rownames(data)<-c('cox','svm','lasso')
   data<-t(data)
   data_f<-as.data.frame(data)
-  univ_models<-tryCatch(survival::coxph(formula = Surv_training ~. ,data=data_f),error=function(e){NULL} )
+  univ_models<-tryCatch(rms::cph(formula = Surv_training ~ cox + svm + lasso ,data=data_f),error=function(e){NULL} )
   if (is.null(univ_models)) {
     stop(errorCondition("Ensemble model can't be created, please check your data..."))
   }else{
