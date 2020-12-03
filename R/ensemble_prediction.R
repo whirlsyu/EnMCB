@@ -34,12 +34,14 @@ ensemble_prediction <- function(ensemble_model,predition_data) {
   }
   svm<-stats::predict(ensemble_model$svm$svm_model, data.frame(t(predition_data)))$predicted
   cox<-stats::predict(ensemble_model$cox$cox_model, data.frame(t(predition_data)))
-  lasso<-stats::predict(ensemble_model$lasso$`lasso model`,t(predition_data),s=ensemble_model$lasso$`corrected lambda(min)`)
+  enet<-stats::predict(ensemble_model$enet$enet_model,t(predition_data),s=ensemble_model$lasso$`corrected_lambda(min)`)
+  coxboost<-stats::predict(ensemble_model$coxboost$coxboost_model, data.frame(t(predition_data)))
   data<-rbind(cox,
               svm,
-              t(lasso)
+              t(lasso),
+              coxboost
   )
-  rownames(data)<-c('cox','svm','lasso')
+  rownames(data)<-c('cox','svm','lasso','coxboost')
   data<-t(data)
   data_f<-as.data.frame(data)
   stats::predict(ensemble_model$stacking, data_f)

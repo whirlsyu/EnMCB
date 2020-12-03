@@ -11,7 +11,7 @@
 #' @param data_set methylation matrix used for training the model in the analysis.
 #' @param Surv Survival function contain the survival information for training.
 #' @param nfold fold used in the cross validation precedure.
-#' @param Method model used to calculate the compound values for multiple Methylation correlation blocks. Options include "svm" "cox" and "lasso". The default option is SVM method.
+#' @param Method model used to calculate the compound values for multiple Methylation correlation blocks. Options include "svm" "cox" and "enet". The default option is SVM method.
 #' @param silent Ture indicates that processing information and progress bar will be shown.
 #' @author Xin Yu
 #' @keywords Methylation Correlation
@@ -44,7 +44,7 @@ metricMCB.cv<-function(
   data_set,
   Surv,
   nfold=10,
-  Method=c("svm","cox","lasso")[1],
+  Method=c("svm","cox","enet")[1],
   silent=FALSE
 ){
   requireNamespace("stats")
@@ -73,7 +73,7 @@ metricMCB.cv<-function(
   MCB_matrix<-matrix(0,nrow = nrow(MCBset),ncol = ncol(data_set))
   colnames(MCB_matrix)<-colnames(data_set)
   rownames(MCB_matrix)<-as.numeric(MCBset[,'MCB_no'])
-  if (!Method %in% c("svm","cox","lasso")){
+  if (!Method %in% c("svm","cox","enet")){
     stop(paste("Method:",Method,"is not supported, see hlep files for the details.",collapse = " "))
   }
   sp<-sample(1:ncol(data_set),replace = F)
@@ -115,10 +115,10 @@ metricMCB.cv<-function(
         model<-tryCatch(survival::coxph(times ~ ., 
                                         data_used_for_training),
                         error = function(e){return(NULL)})
-      }else if(Method=="lasso"){
+      }else if(Method=="enet"){
         model<-tryCatch( glmnet::cv.glmnet(data_used_for_training,
                                            times,
-                                           #cox model in lasso was used, note that here cox and lasso penalty were used.
+                                           #cox model in enet was used, note that here penalty were used.
                                            family="cox",
                                            alpha=0.5,
                                            # The elasticnet mixing parameter, with 0≤α≤ 1. The penalty is defined as
@@ -141,8 +141,8 @@ metricMCB.cv<-function(
         #predictions
         if (Method=="svm") MCB_matrix[mcb,rz]<-stats::predict(model,data_used_for_testing)$predicted
         if (Method=="cox") MCB_matrix[mcb,rz]<-stats::predict(model,data_used_for_testing)
-        if (Method=="lasso"){
-          #if you use lambda.1se instead, the penalty of lasso would be larger, leading that most of covariates were removed form the final model.
+        if (Method=="enet"){
+          #if you use lambda.1se instead, the penalty of enet would be larger, leading that most of covariates were removed form the final model.
           MCB_matrix[mcb,rz]<-stats::predict(model,data_used_for_testing,s=lambda_min_corrected)
         }
       }else{

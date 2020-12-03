@@ -12,8 +12,11 @@
 #' @param MCBset Methylation Correlation Block information returned by the IndentifyMCB function.
 #' @param Surv Survival function contain the survival information for training.
 #' @param Surv.new Survival function contain the survival information for testing.
-#' @param Method model used to calculate the compound values for multiple Methylation correlation blocks. Options include "svm" "cox" and "eNet". The default option is SVM method.
-#' @param silent Ture indicates that processing information and progress bar will be shown.
+#' @param Method model used to calculate the compound values for multiple Methylation correlation blocks. Options include "svm" "cox" and "enet". The default option is SVM method.
+#' @param predict_time time point of the ROC curve used in the AUC calculations, default is 5 years.
+#' @param ci if True, the confidence intervals for AUC under area under the receiver operating characteristic curve will be calculated. This will be time consuming. default is False.
+#' @param silent True indicates that processing information and progress bar will be shown.
+#' @param alpha The elasticnet mixing parameter, with 0 ≤ alpha ≤ 1. alpha=1 is the lasso penalty, and alpha=0 the ridge penalty. It works only when "enet" Method is selected.
 #' @author Xin Yu
 #' @keywords Methylation Correlation
 #' @examples
@@ -52,8 +55,11 @@ metricMCB<-function(
   Surv,
   testing_set=NULL,
   Surv.new=NULL,
-  Method=c("svm","cox","lasso")[1],
-  silent=FALSE
+  Method=c("svm","cox","enet","coxboost")[1],
+  predict_time = 5,
+  ci=FALSE,
+  silent=FALSE,
+  alpha = 0.5
   ){
   requireNamespace("stats")
   if (!silent) {
@@ -71,7 +77,20 @@ metricMCB<-function(
   if (is.integer0(grep("MCB_no|CpGs",colnames(MCBset)))){
     stop(paste("Methylation Correlation Block information in your result must have columns of MCB_no and CpGs. Please check your results."))
   }
-  if (!Method %in% c("svm","cox","lasso")){
+  #private functions
+  create_doc<-function(ci){
+    if (ci){
+      write_MCB<-rep(NA,5)
+      names(write_MCB)<-c('MCB_no','AUC_train','95_CI_train','AUC_test','95_CI_test')
+      return(write_MCB)
+    }else{
+      write_MCB<-rep(NA,3)
+      names(write_MCB)<-c('MCB_no','AUC_train','AUC_test')
+      return(write_MCB)
+    }
+
+  }
+  if (!Method %in% c("svm","cox","enet")){
     stop(paste("Method:",Method,"is not supported, see hlep files for the details.",collapse = " "))
   }else if (Method=="svm") {
     # constuction of MCB Method matrix for SVM
@@ -97,9 +116,9 @@ metricMCB<-function(
       if (show_bar&!silent) {
         utils::setTxtProgressBar(bar, mcb)
       }
-      write_MCB<-c(NA,NA,NA)
+      write_MCB<-create_doc(ci)
       #save the mcb number
-      write_MCB[1]<-as.numeric(MCBset[mcb,'MCB_no'])
+      write_MCB['MCB_no']<-as.numeric(MCBset[mcb,'MCB_no'])
       # build temp variable for saving the results.
       # MCB number
       # aquire information for CpG sites in MCB
@@ -110,17 +129,22 @@ metricMCB<-function(
       #predictions
       if (!is.null(svm_model)) {
         MCB_svm_matrix_training[mcb,]<-stats::predict(svm_model, data.frame(t(training_set[CpGs,])))$predicted
-        write_MCB[2]<-survivalROC::survivalROC(Stime = times[,1],status = times[,2],marker = MCB_svm_matrix_training[mcb,rz],predict.time = 5,method = "NNE",span =0.25*length(times)^(-0.20)  )$AUC
+        auc_and_ci = calculate_auc_ci(survival = times,marker = MCB_svm_matrix_training[mcb,rz],predict_time,ci)
+        write_MCB['AUC_train']<-auc_and_ci$AUC
+        if (ci) write_MCB['95_CI_train']<-auc_and_ci$CI95
         #if it has a independent test set
         if (!is.null(testing_set)){
           MCB_svm_matrix_test_set[mcb,]<-stats::predict(svm_model, data.frame(t(testing_set[CpGs,])))$predicted
-          write_MCB[3]<-survivalROC::survivalROC(Stime = Surv.new[,1],status = Surv.new[,2],marker = MCB_svm_matrix_test_set[mcb,],predict.time = 5,method = "NNE",span =0.25*length(Surv.new)^(-0.20) )$AUC
-          if (abs(write_MCB[2]+write_MCB[3]-1)>best_auc){
-            best_auc<-abs(write_MCB[2]+write_MCB[3]-1)
+          auc_and_ci = calculate_auc_ci(Surv.new,marker = MCB_svm_matrix_test_set[mcb,],predict_time,ci)
+          write_MCB['AUC_test']<-auc_and_ci$AUC
+          if (ci) write_MCB['95_CI_test']<-auc_and_ci$CI95
+          if (abs(write_MCB['AUC_train']+write_MCB['AUC_test']-1)>best_auc){
+            best_auc<-abs(write_MCB['AUC_train']+write_MCB['AUC_test']-1)
             best_model<-list(mcb,svm_model)
           }
           #if it does not have a independent test set
         }else{
+          write_MCB<-write_MCB[1:3]
           if (abs(write_MCB[2]-0.5)>best_auc){
             best_auc<-abs(write_MCB[2]-0.5)+0.5
             best_model<-list(mcb,svm_model)
@@ -131,7 +155,6 @@ metricMCB<-function(
       }
       mcb_SVM_res<-rbind(mcb_SVM_res,write_MCB)
     }
-    cat("\n")
     colnames(mcb_SVM_res)<-c("MCB_no","training_set_auc","test_set_auc")
     names(best_model)<-c("MCB_no","svm_model")
     FunctionResults$MCB_svm_matrix_training<-MCB_svm_matrix_training
@@ -160,9 +183,9 @@ metricMCB<-function(
     mcb_cox_res<-NULL
     for (mcb in seq_len(nrow(MCBset))) {
       if (show_bar&!silent){utils::setTxtProgressBar(bar, mcb)}
-      write_MCB<-c(NA,NA,NA)
+      write_MCB<-create_doc(ci)
       #save the mcb number
-      write_MCB[1]<-as.numeric(MCBset[mcb,'MCB_no'])
+      write_MCB['MCB_no']<-as.numeric(MCBset[mcb,'MCB_no'])
       # build temp variable for saving the results.
       # MCB number
       # aquire information for CpG sites in MCB
@@ -173,19 +196,24 @@ metricMCB<-function(
       #predictions
       if (!is.null(univ_models)) {
         MCB_cox_matrix_training[mcb,]<-stats::predict(univ_models, data.frame(t(training_set[CpGs,])))
-        write_MCB[2]<-survivalROC::survivalROC(Stime = times[,1],status = times[,2],marker = MCB_cox_matrix_training[mcb,rz],predict.time = 5,method = "NNE",span = 0.25*length(times)^(-0.20))$AUC
+        auc_and_ci = calculate_auc_ci(survival = times,marker = MCB_cox_matrix_training[mcb,rz],predict_time,ci)
+        write_MCB['AUC_train']<-auc_and_ci$AUC
+        if (ci) write_MCB['95_CI_train']<-auc_and_ci$CI95
         #if it has a independent test set
         if (!is.null(testing_set)){
           MCB_cox_matrix_test_set[mcb,]<-stats::predict(univ_models, data.frame(t(testing_set[CpGs,])))
-          write_MCB[3]<-survivalROC::survivalROC(Stime = Surv.new[,1],status = Surv.new[,2],marker = MCB_cox_matrix_test_set[mcb,],predict.time = 5,method = "NNE",span =0.25*length(Surv.new)^(-0.20))$AUC
-          if (abs(write_MCB[2]+write_MCB[3]-1)>best_auc){
-            best_auc<-abs(write_MCB[2]+write_MCB[3]-1)
-            best_model<-list(mcb,univ_models)
+          auc_and_ci = calculate_auc_ci(Surv.new,marker = MCB_cox_matrix_test_set[mcb,],predict_time,ci)
+          write_MCB['AUC_test']<-auc_and_ci$AUC
+          if (ci) write_MCB['95_CI_test']<-auc_and_ci$CI95
+          if (abs(write_MCB['AUC_train']+write_MCB['AUC_test']-1)>best_auc){
+            best_auc<-abs(write_MCB['AUC_train']+write_MCB['AUC_test']-1)
+            best_model<-list(mcb,svm_model)
           }
           #if it does not have a independent test set
         }else{
-          if (abs(write_MCB[2]-0.5)>best_auc){
-            best_auc<-abs(write_MCB[2]-0.5)+0.5
+          write_MCB<-write_MCB[1:3]
+          if (abs(write_MCB['AUC_train']-0.5)>best_auc){
+            best_auc<-abs(write_MCB['AUC_train']-0.5)+0.5
             best_model<-list(mcb,univ_models)
           }
         }
@@ -194,7 +222,6 @@ metricMCB<-function(
       }
       mcb_cox_res<-rbind(mcb_cox_res,write_MCB)
     }
-    cat("\n")
     colnames(mcb_cox_res)<-c("MCB_no","training_set_auc","test_set_auc")
     names(best_model)<-c("MCB_no","cox_model")
     FunctionResults$MCB_cox_matrix_training<-MCB_cox_matrix_training
@@ -202,41 +229,42 @@ metricMCB<-function(
     FunctionResults$cox_auc_results<-mcb_cox_res
     FunctionResults$maximum_auc<-best_auc
     FunctionResults$best_cox_model<-best_model
-  }else if (Method=="lasso") {
-    # constuction of MCB Method matrix for lasso
-    MCB_lasso_matrix_training<-matrix(0,nrow = nrow(MCBset),ncol = ncol(training_set))
-    colnames(MCB_lasso_matrix_training)<-colnames(training_set)
-    rownames(MCB_lasso_matrix_training)<-as.numeric(MCBset[,'MCB_no'])
+  }else if (Method=="enet") {
+    # constuction of MCB Method matrix for enet
+    MCB_enet_matrix_training<-matrix(0,nrow = nrow(MCBset),ncol = ncol(training_set))
+    colnames(MCB_enet_matrix_training)<-colnames(training_set)
+    rownames(MCB_enet_matrix_training)<-as.numeric(MCBset[,'MCB_no'])
     #if it has a independent test set create the test_set res set
     if (!is.null(testing_set)) {
-      MCB_lasso_matrix_test_set<-matrix(0,nrow = nrow(MCBset),ncol = ncol(testing_set))
-      colnames(MCB_lasso_matrix_test_set)<-colnames(testing_set)
-      rownames(MCB_lasso_matrix_test_set)<-as.numeric(MCBset[,'MCB_no'])
+      MCB_enet_matrix_test_set<-matrix(0,nrow = nrow(MCBset),ncol = ncol(testing_set))
+      colnames(MCB_enet_matrix_test_set)<-colnames(testing_set)
+      rownames(MCB_enet_matrix_test_set)<-as.numeric(MCBset[,'MCB_no'])
     }else{
-      MCB_lasso_matrix_test_set<-NULL
+      MCB_enet_matrix_test_set<-NULL
     }
     FunctionResults<-NULL
     rz=!(is.na(Surv)|Surv[,1]==0)
     times=Surv[rz]
     best_auc<-0
     best_model<-NULL
-    mcb_lasso_res<-NULL
+    mcb_enet_res<-NULL
     for (mcb in seq_len(nrow(MCBset))) {
       if (show_bar&!silent){utils::setTxtProgressBar(bar, mcb)}
-      write_MCB<-c(NA,NA,NA)
+      write_MCB<-create_doc(ci)
       #save the mcb number
-      write_MCB[1]<-as.numeric(MCBset[mcb,'MCB_no'])
+      write_MCB['MCB_no']<-as.numeric(MCBset[mcb,'MCB_no'])
       # build temp variable for saving the results.
       # MCB number
       # aquire information for CpG sites in MCB
       CpGs<-strsplit(MCBset[mcb,'CpGs']," ")[[1]]
       data_used_for_training<-t(training_set[CpGs,rz])
-      # train a lasso model
-      lasso_model <- tryCatch(glmnet::cv.glmnet(data_used_for_training,
+      # train a enet model
+      enet_model <- tryCatch(glmnet::cv.glmnet(data_used_for_training,
                                                          times,
-                                                         #cox model in lasso was used, note that here cox and lasso penalty were used.
+                                                         #cox model in enet was used, note that here cox and enet penalty were used.
                                                          family="cox",
-                                                         alpha=0.5,
+                                                         #alpha = 0.5
+                                                         alpha=alpha,
                                                          # The elasticnet mixing parameter, with 0≤α≤ 1. The penalty is defined as
                                                          # (1-alpha)/2||beta||_2^2+alpha||beta||_1
                                                          # alpha=1 is the lasso penalty, and alpha=0 the ridge penalty.
@@ -246,45 +274,120 @@ metricMCB<-function(
                                                          #foldid = 10
       ),error = NULL)
       #predictions
-      if (!is.null(lasso_model)) {
+      if (!is.null(enet_model)) {
         correctional_value=1
-        while ( sum(stats::coef(lasso_model, s = lasso_model$lambda.min-0.001*(correctional_value-1))>0)<1 &
-               (lasso_model$lambda.min-0.001*(correctional_value-1))>0 ) {
+        while ( sum(stats::coef(enet_model, s = enet_model$lambda.min-0.001*(correctional_value-1))>0)<1 &
+               (enet_model$lambda.min-0.001*(correctional_value-1))>0 ) {
           correctional_value=correctional_value*1.25
         }
-        lambda_min_corrected<-lasso_model$lambda.min-0.001*(correctional_value-1)
-        #if you use lambda.1se instead, the penalty of lasso would be larger, leading that most of covariates were removed form the final model.
-        MCB_lasso_matrix_training[mcb,]<-stats::predict(lasso_model,t(training_set[CpGs,]),s=lambda_min_corrected)
-        write_MCB[2]<-survivalROC::survivalROC(Stime = times[,1],status = times[,2],marker = MCB_lasso_matrix_training[mcb,rz],predict.time = 5,method = "NNE",span = 0.25*length(times)^(-0.20) )$AUC
-        #if it has a independent test set
+        lambda_min_corrected<-enet_model$lambda.min-0.001*(correctional_value-1)
+        #if you use lambda.1se instead, the penalty of enet would be larger, leading that most of covariates were removed form the final model.
+        MCB_enet_matrix_training[mcb,]<-stats::predict(enet_model,t(training_set[CpGs,]),s=lambda_min_corrected)
+        auc_and_ci = calculate_auc_ci(survival = times,marker = MCB_enet_matrix_training[mcb,rz],predict_time,ci)
+        write_MCB['AUC_train']<-auc_and_ci$AUC
+        if (ci) write_MCB['95_CI_train']<-auc_and_ci$CI95
+         #if it has a independent test set
         if (!is.null(testing_set)){
           # lambda.min was used.
-          MCB_lasso_matrix_test_set[mcb,]<-stats::predict(lasso_model, t(testing_set[CpGs,]),s=lambda_min_corrected)
-          write_MCB[3]<-survivalROC::survivalROC(Stime = Surv.new[,1],status = Surv.new[,2],marker = MCB_lasso_matrix_test_set[mcb,],predict.time = 5,method = "NNE",span = 0.25*length(Surv.new)^(-0.20))$AUC
-          if (abs(write_MCB[2]+write_MCB[3]-1)>best_auc){
-            best_auc<-abs(write_MCB[2]+write_MCB[3]-1)
-            best_model<-list(mcb,lasso_model,lambda_min_corrected)
+          MCB_enet_matrix_test_set[mcb,]<-stats::predict(enet_model, t(testing_set[CpGs,]),s=lambda_min_corrected)
+          auc_and_ci = calculate_auc_ci(Surv.new,marker = MCB_enet_matrix_test_set[mcb,],predict_time,ci)
+          write_MCB['AUC_test']<-auc_and_ci$AUC
+          if (ci) write_MCB['95_CI_test']<-auc_and_ci$CI95
+          if (abs(write_MCB['AUC_train']+write_MCB['AUC_test']-1)>best_auc){
+            best_auc<-abs(write_MCB['AUC_train']+write_MCB['AUC_test']-1)
+            best_model<-list(mcb,enet_model,lambda_min_corrected)
           }
           #if it does not have a independent test set
         }else{
-          if (abs(write_MCB[2]-0.5)>best_auc){
-            best_auc<-abs(write_MCB[2]-0.5)+0.5
-            best_model<-list(mcb,lasso_model,lambda_min_corrected)
+          write_MCB<-write_MCB[1:3]
+          if (abs(write_MCB['AUC_train']-0.5)>best_auc){
+            best_auc<-abs(write_MCB['AUC_train']-0.5)+0.5
+            best_model<-list(mcb,enet_model,lambda_min_corrected)
           }
         }
       }else{
-        stop("This coxph model can not be built.")
+        stop("This enet model can not be built.")
       }
-      mcb_lasso_res<-rbind(mcb_lasso_res,write_MCB)
+      mcb_enet_res<-rbind(mcb_enet_res,write_MCB)
+    }
+    colnames(mcb_enet_res)<-c("MCB_no","training_set_auc","test_set_auc")
+    names(best_model)<-c("MCB_no","enet_model","corrected_lambda(min)")
+    FunctionResults$MCB_enet_matrix_training<-MCB_enet_matrix_training
+    FunctionResults$MCB_enet_matrix_test_set<-MCB_enet_matrix_test_set
+    FunctionResults$enet_auc_results<-mcb_enet_res
+    FunctionResults$maximum_auc<-best_auc
+    FunctionResults$best_enet_model<-best_model
+  }else if (Method=="coxboost") {
+    # constuction of MCB Method matrix for CoxBoost
+    MCB_coxboost_matrix_training<-matrix(0,nrow = nrow(MCBset),ncol = ncol(training_set))
+    colnames(MCB_coxboost_matrix_training)<-colnames(training_set)
+    rownames(MCB_coxboost_matrix_training)<-as.numeric(MCBset[,'MCB_no'])
+    #if it has a independent test set create the test_set res set
+    if (!is.null(testing_set)) {
+      MCB_coxboost_matrix_test_set<-matrix(0,nrow = nrow(MCBset),ncol = ncol(testing_set))
+      colnames(MCB_coxboost_matrix_test_set)<-colnames(testing_set)
+      rownames(MCB_coxboost_matrix_test_set)<-as.numeric(MCBset[,'MCB_no'])
+    }else{
+      MCB_coxboost_matrix_test_set<-NULL
+    }
+    FunctionResults<-NULL
+    rz=!(is.na(Surv)|Surv[,1]==0)
+    times=Surv[rz]
+    best_auc<-0
+    best_model<-NULL
+    mcb_coxboost_res<-NULL
+    for (mcb in seq_len(nrow(MCBset))) {
+      #if (nrow(MCBset)>1){}
+      if (show_bar&!silent) {
+        utils::setTxtProgressBar(bar, mcb)
+      }
+      write_MCB<-create_doc(ci)
+      #save the mcb number
+      write_MCB['MCB_no']<-as.numeric(MCBset[mcb,'MCB_no'])
+      # build temp variable for saving the results.
+      # MCB number
+      # aquire information for CpG sites in MCB
+      CpGs<-strsplit(MCBset[mcb,'CpGs']," ")[[1]]
+      data_used_for_training<-data.frame(t(training_set[CpGs,rz]))
+      # train a coxboost model
+      coxboost_model <- tryCatch(survivalsvm::survivalsvm(times ~ ., data_used_for_training, gamma.mu = 0.1,type = "regression"),error = NULL)
+      #predictions
+      if (!is.null(coxboost_model)) {
+        MCB_coxboost_matrix_training[mcb,]<-stats::predict(coxboost_model, data.frame(t(training_set[CpGs,])))$predicted
+        auc_and_ci = calculate_auc_ci(survival = times,marker = MCB_coxboost_matrix_training[mcb,rz],predict_time,ci)
+        write_MCB['AUC_train']<-auc_and_ci$AUC
+        if (ci) write_MCB['95_CI_train']<-auc_and_ci$CI95
+        #if it has a independent test set
+        if (!is.null(testing_set)){
+          MCB_coxboost_matrix_test_set[mcb,]<-stats::predict(coxboost_model, data.frame(t(testing_set[CpGs,])))$predicted
+          auc_and_ci = calculate_auc_ci(Surv.new,marker = MCB_coxboost_matrix_test_set[mcb,],predict_time,ci)
+          write_MCB['AUC_test']<-auc_and_ci$AUC
+          if (ci) write_MCB['95_CI_test']<-auc_and_ci$CI95
+          if (abs(write_MCB['AUC_train']+write_MCB['AUC_test']-1)>best_auc){
+            best_auc<-abs(write_MCB['AUC_train']+write_MCB['AUC_test']-1)
+            best_model<-list(mcb,coxboost_model)
+          }
+          #if it does not have a independent test set
+        }else{
+          write_MCB<-write_MCB[1:3]
+          if (abs(write_MCB['AUC_train']-0.5)>best_auc){
+            best_auc<-abs(write_MCB['AUC_train']-0.5)+0.5
+            best_model<-list(mcb,coxboost_model)
+          }
+        }
+      }else{
+        stop("This CoxBoost model can not be built.")
+      }
+      mcb_coxboost_res<-rbind(mcb_coxboost_res,write_MCB)
     }
     cat("\n")
-    colnames(mcb_lasso_res)<-c("MCB_no","training_set_auc","test_set_auc")
-    names(best_model)<-c("MCB_no","lasso model","corrected lambda(min)")
-    FunctionResults$MCB_lasso_matrix_training<-MCB_lasso_matrix_training
-    FunctionResults$MCB_lasso_matrix_test_set<-MCB_lasso_matrix_test_set
-    FunctionResults$lasso_auc_results<-mcb_lasso_res
+    colnames(mcb_coxboost_res)<-c("MCB_no","training_set_auc","test_set_auc")
+    names(best_model)<-c("MCB_no","coxboost_model")
+    FunctionResults$MCB_coxboost_matrix_training<-MCB_coxboost_matrix_training
+    FunctionResults$MCB_coxboost_matrix_test_set<-MCB_coxboost_matrix_test_set
+    FunctionResults$coxboost_auc_results<-mcb_coxboost_res
     FunctionResults$maximum_auc<-best_auc
-    FunctionResults$best_lasso_model<-best_model
+    FunctionResults$best_coxboost_model<-best_model
   }
   return(FunctionResults)
 }

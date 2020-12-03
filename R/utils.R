@@ -14,14 +14,13 @@
 # version.string R version 3.5.0 (2018-04-23)
 # nickname       Joy in Playing
 
+# load private functions
+
 print_as_data <- function(variables,file) {
   sink(file)
   print(variables)
   sink()
 }
-
-
-
 
 test_logrank_p_in_KM<-function(mcb_matrix,y_surv){
   p.val_all<-NULL
@@ -331,3 +330,36 @@ is.integer0 <- function(x)
 {
   is.integer(x) && length(x) == 0L
 }
+
+bs_ci <- function(data, indices, predict.time) { 
+  d <- data[indices,] # allows boot to select sample
+  d <- d[!is.na(d$survival),]
+  surv.res = survivalROC::survivalROC.C(Stime = d$survival, 
+                         status = d$survival_status, 
+                         marker = d$marker, 
+                         predict.time,
+                         span = 0.25*NROW(d)^(-0.20))
+  return(surv.res$AUC)
+}
+
+calculate_auc_ci <- function(survival, marker, predict_time,ci){
+  if (ci){
+    ci_res = boot::boot(data=data.frame(survival = survival[,1],
+                                    survival_status = survival[,2],
+                                    marker = marker),
+                    statistic=bs_ci, R=1000, predict.time = predict_time)
+    res = boot::boot.ci(ci_res,type="perc")
+    return(list( AUC = res$t0, 
+                 CI95 = paste(format(res$percent[,4], digits = 4),"-", format(res$percent[,5], digits = 4))
+    ))
+  }else{
+    res = survivalROC::survivalROC.C(Stime = survival[,1], 
+                               status = survival[,2], 
+                               marker = marker, 
+                               predict.time = predict_time,
+                               span = 0.25*length(survival)^(-0.20))
+    return(res)
+  }
+
+}
+# end load
