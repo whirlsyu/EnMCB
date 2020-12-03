@@ -391,7 +391,6 @@ metricMCB<-function(
       }
       mcb_coxboost_res<-rbind(mcb_coxboost_res,write_MCB)
     }
-    cat("\n")
     colnames(mcb_coxboost_res)<-c("MCB_no","training_set_auc","test_set_auc")
     names(best_model)<-c("MCB_no","coxboost_model")
     FunctionResults$MCB_coxboost_matrix_training<-MCB_coxboost_matrix_training
