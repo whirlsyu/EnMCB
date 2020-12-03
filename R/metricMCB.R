@@ -62,6 +62,18 @@ metricMCB<-function(
   alpha = 0.5
   ){
   requireNamespace("stats")
+  # load private functions
+  bs_ci <- function(data, indices, predict.time = predict_time) { 
+    d <- data[indices,] # allows boot to select sample 
+    surv.res = survivalROC(Stime = d$survival, 
+                           status = d$survival_status, 
+                           marker = d$marker, 
+                           predict.time = predict.time, method = "NNE",
+                           span = 0.25*NROW(d)^(-0.20))
+    return(surv.res$AUC)
+    }
+  # end load
+  
   if (!silent) {
     cat("Start anaylsis, this may take a while...\n")
     show_bar=nrow(MCBset)>1
@@ -88,7 +100,6 @@ metricMCB<-function(
       names(write_MCB)<-c('MCB_no','AUC_train','AUC_test')
       return(write_MCB)
     }
-
   }
   if (!Method %in% c("svm","cox","enet")){
     stop(paste("Method:",Method,"is not supported, see hlep files for the details.",collapse = " "))
@@ -391,3 +402,5 @@ metricMCB<-function(
   }
   return(FunctionResults)
 }
+
+
