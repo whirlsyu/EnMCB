@@ -207,7 +207,11 @@ metricMCB<-function(
       CpGs<-strsplit(MCBset[mcb,'CpGs']," ")[[1]]
       data_used_for_training<-data.frame(t(training_set[CpGs,rz]))
       # train a cox model
-      univ_models<-tryCatch(survival::coxph(times ~.,data=data_used_for_training),error = NULL)
+      if (ncol(data_used_for_training)<10){
+        univ_models<-tryCatch(survival::coxph(times ~.,data=data_used_for_training),error = NULL)
+      }else{
+        univ_models<-tryCatch(survival::coxph(times ~.,data=data_used_for_training),error = NULL)
+      }
       #predictions
       if (!is.null(univ_models)) {
         MCB_cox_matrix_training[mcb,]<-stats::predict(univ_models, data.frame(t(training_set[CpGs,])))
