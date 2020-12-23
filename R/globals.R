@@ -6,7 +6,7 @@
 #' @import glmnet
 #' @import survivalsvm
 #' @import ggplot2
-#' @import minfi
+#' @import mboost
 #' @import IlluminaHumanMethylation450kanno.ilmn12.hg19
 #' @import survival
 #' @import utils
@@ -15,6 +15,6 @@
 utils::globalVariables(c('%dopar%','FPF','TPF','aes','chr_id','coef','coord_cartesian','doParallel','data',
                          'element_blank','element_line','foreach','geom_abline','geom_roc','ggplot','rnorm',
                          'ggplot2','ggsave','groups','median','new','parallel','pheatmap','plot','demo_data',
-                         'prediction','prognosticROC','qnorm','style_roc','survivalROC','theme',
+                         'prediction','prognosticROC','qnorm','style_roc','survivalROC','theme','boot','boot.ci',
                          'theme_grey','theme_light'))
 

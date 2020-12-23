@@ -49,7 +49,7 @@ IdentifyMCB<-function(
   }
   cat("Start calculating the correlation, this may take a while...\n")
   FunctionResults<-list()
-  Illumina_Infinium_Human_Methylation_450K<-minfi::getAnnotation("IlluminaHumanMethylation450kanno.ilmn12.hg19")
+  Illumina_Infinium_Human_Methylation_450K<-getAnnotation("IlluminaHumanMethylation450kanno.ilmn12.hg19")
   met_cg_allgene<-Illumina_Infinium_Human_Methylation_450K[rownames(MethylationProfile),]
   chromosomes<-unique(met_cg_allgene[,'chr'])
   chromosomes<-chromosomes[order(chromosomes)]

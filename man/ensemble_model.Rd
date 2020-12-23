@@ -22,7 +22,7 @@ Object of class \code{list} with elements (XXX repesents the model you choose):
  \tabular{ll}{
    \code{cox} \tab Model object for the cox model at first level. \cr
    \code{svm} \tab Model object for the svm model at first level. \cr
-   \code{lasso} \tab Model object for the lasso model at first level. \cr
+   \code{enet} \tab Model object for the enet model at first level. \cr
    \code{stacking} \tab Model object for the stacking model. \cr
  }
 }

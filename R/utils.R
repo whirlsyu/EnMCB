@@ -22,6 +22,86 @@ print_as_data <- function(variables,file) {
   sink()
 }
 
+#inherent from minifi package to reduce the dependencies
+getAnnotation <- function(object, what = "everything", lociNames = NULL,
+                          orderByLocation = FALSE, dropNonMapping = FALSE) {
+  .annoGet <- function(what, envir) {
+    pointer <- get(what, envir = envir)
+    if (is(pointer, "DataFrame")) return(pointer)
+    get(pointer$what, envir = as.environment(pointer$envir))
+  }
+  getAnnotationObject <- function(object) {
+    if (is.character(object)) {
+      if (!require(object, character.only = TRUE)) {
+        stop(sprintf("cannot load annotation package %s", object))
+      }
+      object <- get(object)
+    }
+    if (!is(object, "IlluminaMethylationAnnotation")) {
+      stop("Could not locate annotation object for 'object' of class",
+           class(object))
+    }
+    object
+  }
+  .availableAnnotation <- function(object) {
+    object <- getAnnotationObject(object)
+    allAnnoNames <- ls(object@data)
+    annoClasses <- sub("\\..*", "", allAnnoNames)
+    annoClassesChoices <- sub(".*\\.", "", allAnnoNames)
+    annoClassesChoices[grep("\\.", allAnnoNames, invert = TRUE)] <- ""
+    annoClassesChoices <- split(annoClassesChoices, annoClasses)
+    annoClasses <- unique(annoClasses)
+    defaults <- object@defaults
+    out <- list(
+      names = allAnnoNames,
+      classes = annoClasses,
+      classChoices = annoClassesChoices,
+      defaults = defaults)
+    out
+  }
+  # Processing of arguments and check
+  annoObject <- getAnnotationObject(object)
+  available <- .availableAnnotation(annoObject)
+  if ("everything" %in% what)  what <- available$defaults
+  if (!(all(what %in% available$names))) {
+    stop("the value of argument 'what' is not part of the annotation ",
+         "package or 'everything'")
+  }
+  n_choices <- vapply(
+    available$classes,
+    function(cl) length(grep(cl, what)),
+    integer(1))
+  if (any(n_choices > 1)) stop("only one choice per allowable class")
+  if (!any(grepl("^Locations", what)) &&
+      (orderByLocation || dropNonMapping)) {
+    stop("To use 'orderbyLocation' or 'dropNonMapping' specify Locations ",
+         "as part of 'what'")
+  }
+  # TODO: Ensure same order always
+  # Old code for inspiration
+  # bestOrder <- c("Locations", "Manifest", "IlluminaSNPs", "Annotation")
+  # what <- bestOrder[bestOrder %in% what]
+  
+  out <- do.call(cbind, lapply(what, function(wh) {
+    .annoGet(wh, envir = annoObject@data)
+  }))
+  
+  if (!is.null(lociNames)) {
+    lociNames <- lociNames[lociNames %in% rownames(out)]
+  }
+  if (is(object, "MethylSet") || is(object, "RatioSet") ||
+      is(object, "GenomicMethylSet") || is(object, "GenomicRatioSet")) {
+    rNames <- rownames(object)
+    if (is.null(lociNames)) {
+      lociNames <- rNames[rNames %in% rownames(out)]
+    } else {
+      lociNames <- rNames[rNames %in% lociNames]
+    }
+  }
+  if (!is.null(lociNames)) out <- out[match(lociNames, rownames(out)),]
+  out
+}
+
 test_logrank_p_in_KM<-function(mcb_matrix,y_surv){
   p.val_all<-NULL
   for (mcb in rownames(mcb_matrix)){
@@ -344,11 +424,11 @@ bs_ci <- function(data, indices, predict.time) {
 
 calculate_auc_ci <- function(survival, marker, predict_time,ci){
   if (ci){
-    ci_res = boot::boot(data=data.frame(survival = survival[,1],
+    ci_res = boot(data=data.frame(survival = survival[,1],
                                     survival_status = survival[,2],
                                     marker = marker),
                     statistic=bs_ci, R=1000, predict.time = predict_time)
-    res = boot::boot.ci(ci_res,type="perc")
+    res = boot.ci(ci_res,type="perc")
     return(list( AUC = res$t0, 
                  CI95 = paste(format(res$percent[,4], digits = 4),"-", format(res$percent[,5], digits = 4))
     ))
@@ -361,5 +441,60 @@ calculate_auc_ci <- function(survival, marker, predict_time,ci){
     return(res)
   }
 
+}
+
+metricMCB.mean<-function(MCBset,MCB_matrix,Surv,data_set,show_bar=T){
+  FunctionResults<-list()
+  MCB_model_res<-NULL
+  if (show_bar) {
+    bar<-utils::txtProgressBar(min = 1,max = nrow(MCBset),char = "#",style = 3)
+  }
+  for (mcb in seq(nrow(MCBset))) {
+    utils::setTxtProgressBar(bar, mcb)
+    write_MCB<-rep(NA,5)
+    #save the mcb number
+    write_MCB[1]<-as.numeric(MCBset[mcb,'MCB_no'])
+    write_MCB[2]<-MCBset[mcb,'CpGs']
+    CpGs<-strsplit(MCBset[mcb,'CpGs']," ")[[1]]
+    MCB_matrix[mcb,]<-colMeans(data_set[CpGs,])
+    AUC_value<-survivalROC::survivalROC(Stime = Surv[,1],
+                                        status = Surv[,2],
+                                        marker = MCB_matrix[mcb,],
+                                        predict.time = 5,
+                                        method = "NNE",
+                                        span =0.25*length(Surv)^(-0.20))$AUC
+    write_MCB[3]<-AUC_value
+    cindex<-survival::survConcordance(Surv ~ MCB_matrix[mcb,])
+    write_MCB[4]<-cindex$concordance
+    write_MCB[5]<-cindex$std.err
+    MCB_model_res<-rbind(MCB_model_res,write_MCB)
+  }
+  colnames(MCB_model_res)<-c("MCB_no","CpGs","auc","C-index","C-index_SE")
+  rownames(MCB_matrix)<-MCB_model_res[,'MCB_no']
+  FunctionResults$MCB_matrix<-MCB_matrix
+  FunctionResults$auc_results<-MCB_model_res
+  return(FunctionResults)
+}
+
+
+ensemble_prediction.m<- function(ensemble_model,predition_data) {
+  predition_data<-predition_data[rownames(predition_data) %in% names(coef(ensemble_model$cox$cox_model)),]
+  if (nrow(predition_data)!=length(rownames(predition_data))) {
+    stop("ERROR: The predition data and the model have wrong dimensions!")
+  }
+  svm<-stats::predict(ensemble_model$svm$svm_model, data.frame(t(predition_data)))$predicted
+  cox<-stats::predict(ensemble_model$cox$cox_model, data.frame(t(predition_data)))
+  enet<-stats::predict(ensemble_model$enet$`enet model`,t(predition_data),s=ensemble_model$enet$`corrected lambda(min)`)
+  coxboost<-stats::predict(ensemble_model$coxboost$coxboost_model, t(predition_data))[,1]
+  data<-rbind(cox,
+              svm,
+              t(enet),
+              coxboost
+  )
+  rownames(data)<-c('cox','svm','enet','coxboost')
+  data<-t(data)
+  data_f<-as.data.frame(data)
+  ensemble = stats::predict(ensemble_model$stacking, data_f)
+  return(t(cbind(data,ensemble)))
 }
 # end load
