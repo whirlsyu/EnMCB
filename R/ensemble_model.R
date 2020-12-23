@@ -88,7 +88,7 @@ ensemble_model <- function(single_res, training_set, Surv_training, testing_set=
   if (is.null(univ_models)) {
     stop(errorCondition("Ensemble model can't be created, please check your data..."))
   }else{
-    res<-list(cox=cox$best_cox_model,
+    res<-list(cox$best_cox_model,
               svm$best_svm_model,
               enet$best_enet_model,
               coxboost$best_coxboost_model,

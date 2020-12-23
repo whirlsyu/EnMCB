@@ -6,7 +6,7 @@
 #' @import glmnet
 #' @import survivalsvm
 #' @import ggplot2
-#' @import minfi
+#' @import mboost
 #' @import IlluminaHumanMethylation450kanno.ilmn12.hg19
 #' @import survival
 #' @import utils

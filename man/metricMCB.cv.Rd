@@ -15,7 +15,7 @@ metricMCB.cv(MCBset,data_set,Surv,nfold,Method,silent)
 
 \item{nfold}{fold used in the cross validation precedure.}
 
-\item{Method}{model used to calculate the compound values for multiple Methylation correlation blocks. Options include "svm" "cox" and "lasso". The default option is SVM method.}
+\item{Method}{model used to calculate the compound values for multiple Methylation correlation blocks. Options include "svm" "cox" and "enet". The default option is SVM method.}
 
 \item{silent}{Ture indicates that processing information and progress bar will be shown.}
 }

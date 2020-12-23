@@ -5,18 +5,20 @@
 #' define the methylated pattern of multiple CpG sites within each block.
 #' Compound scores which calculated all CpGs within individual Methylation Correlation Blocks by linear, SVM or elastic-net model
 #' Predict values were used as the compound methylation values of Methylation Correlation Blocks.
-#' @usage metricMCB(MCBset,training_set,Surv,testing_set,Surv.new,Method,silent)
+#' @usage metricMCB(MCBset,training_set,Surv,testing_set,Surv.new,Method,predict_time,ci,silent,alpha,n_mstop,n_nu)
 #' @export
 #' @param training_set methylation matrix used for training the model in the analysis.
 #' @param testing_set methylation matrix used in the analysis. This can be missing then training set itself will be used as testing set.
 #' @param MCBset Methylation Correlation Block information returned by the IndentifyMCB function.
 #' @param Surv Survival function contain the survival information for training.
 #' @param Surv.new Survival function contain the survival information for testing.
-#' @param Method model used to calculate the compound values for multiple Methylation correlation blocks. Options include "svm" "cox" and "enet". The default option is SVM method.
+#' @param Method model used to calculate the compound values for multiple Methylation correlation blocks. Options include "svm" "cox" "coxboost" and "enet". The default option is SVM method.
 #' @param predict_time time point of the ROC curve used in the AUC calculations, default is 5 years.
 #' @param ci if True, the confidence intervals for AUC under area under the receiver operating characteristic curve will be calculated. This will be time consuming. default is False.
 #' @param silent True indicates that processing information and progress bar will be shown.
 #' @param alpha The elasticnet mixing parameter, with 0 ≤ alpha ≤ 1. alpha=1 is the lasso penalty, and alpha=0 the ridge penalty. It works only when "enet" Method is selected.
+#' @param n_mstop an integer giving the number of initial boosting iterations. If mstop = 0, the offset model is returned. It works only when "coxboost" Method is selected.
+#' @param n_nu a double (between 0 and 1) defining the step size or shrinkage parameter in coxboost model. It works only when "coxboost" Method is selected.
 #' @author Xin Yu
 #' @keywords Methylation Correlation
 #' @examples
@@ -59,7 +61,9 @@ metricMCB<-function(
   predict_time = 5,
   ci=FALSE,
   silent=FALSE,
-  alpha = 0.5
+  alpha = 0.5,
+  n_mstop = 500,
+  n_nu = 0.1
   ){
   requireNamespace("stats")
   # load private functions
@@ -101,7 +105,7 @@ metricMCB<-function(
       return(write_MCB)
     }
   }
-  if (!Method %in% c("svm","cox","enet")){
+  if (!Method %in% c("svm","cox","enet","coxboost")){
     stop(paste("Method:",Method,"is not supported, see hlep files for the details.",collapse = " "))
   }else if (Method=="svm") {
     # constuction of MCB Method matrix for SVM
@@ -149,15 +153,15 @@ metricMCB<-function(
           auc_and_ci = calculate_auc_ci(Surv.new,marker = MCB_svm_matrix_test_set[mcb,],predict_time,ci)
           write_MCB['AUC_test']<-auc_and_ci$AUC
           if (ci) write_MCB['95_CI_test']<-auc_and_ci$CI95
-          if (abs(write_MCB['AUC_train']+write_MCB['AUC_test']-1)>best_auc){
-            best_auc<-abs(write_MCB['AUC_train']+write_MCB['AUC_test']-1)
+          if ((write_MCB['AUC_train']+write_MCB['AUC_test'])>best_auc){
+            best_auc<-write_MCB['AUC_train']+write_MCB['AUC_test']
             best_model<-list(mcb,svm_model)
           }
           #if it does not have a independent test set
         }else{
           write_MCB<-write_MCB[1:3]
-          if (abs(write_MCB[2]-0.5)>best_auc){
-            best_auc<-abs(write_MCB[2]-0.5)+0.5
+          if (write_MCB['AUC_train']>best_auc){
+            best_auc<-write_MCB['AUC_train']
             best_model<-list(mcb,svm_model)
           }
         }
@@ -216,15 +220,15 @@ metricMCB<-function(
           auc_and_ci = calculate_auc_ci(Surv.new,marker = MCB_cox_matrix_test_set[mcb,],predict_time,ci)
           write_MCB['AUC_test']<-auc_and_ci$AUC
           if (ci) write_MCB['95_CI_test']<-auc_and_ci$CI95
-          if (abs(write_MCB['AUC_train']+write_MCB['AUC_test']-1)>best_auc){
-            best_auc<-abs(write_MCB['AUC_train']+write_MCB['AUC_test']-1)
-            best_model<-list(mcb,svm_model)
+          if ((write_MCB['AUC_train']+write_MCB['AUC_test'])>best_auc){
+            best_auc<-write_MCB['AUC_train']+write_MCB['AUC_test']
+            best_model<-list(mcb,univ_models)
           }
           #if it does not have a independent test set
         }else{
           write_MCB<-write_MCB[1:3]
-          if (abs(write_MCB['AUC_train']-0.5)>best_auc){
-            best_auc<-abs(write_MCB['AUC_train']-0.5)+0.5
+          if (write_MCB['AUC_train']>best_auc){
+            best_auc<-write_MCB['AUC_train']
             best_model<-list(mcb,univ_models)
           }
         }
@@ -304,15 +308,15 @@ metricMCB<-function(
           auc_and_ci = calculate_auc_ci(Surv.new,marker = MCB_enet_matrix_test_set[mcb,],predict_time,ci)
           write_MCB['AUC_test']<-auc_and_ci$AUC
           if (ci) write_MCB['95_CI_test']<-auc_and_ci$CI95
-          if (abs(write_MCB['AUC_train']+write_MCB['AUC_test']-1)>best_auc){
-            best_auc<-abs(write_MCB['AUC_train']+write_MCB['AUC_test']-1)
+          if ((write_MCB['AUC_train']+write_MCB['AUC_test'])>best_auc){
+            best_auc<-write_MCB['AUC_train']+write_MCB['AUC_test']
             best_model<-list(mcb,enet_model,lambda_min_corrected)
           }
           #if it does not have a independent test set
         }else{
           write_MCB<-write_MCB[1:3]
-          if (abs(write_MCB['AUC_train']-0.5)>best_auc){
-            best_auc<-abs(write_MCB['AUC_train']-0.5)+0.5
+          if (write_MCB['AUC_train']>best_auc){
+            best_auc<-write_MCB['AUC_train']
             best_model<-list(mcb,enet_model,lambda_min_corrected)
           }
         }
@@ -359,30 +363,31 @@ metricMCB<-function(
       # MCB number
       # aquire information for CpG sites in MCB
       CpGs<-strsplit(MCBset[mcb,'CpGs']," ")[[1]]
-      data_used_for_training<-data.frame(t(training_set[CpGs,rz]))
+      data_used_for_training<-t(training_set[CpGs,rz])
       # train a coxboost model
-      coxboost_model <- tryCatch(survivalsvm::survivalsvm(times ~ ., data_used_for_training, gamma.mu = 0.1,type = "regression"),error = NULL)
+      coxboost_model <- tryCatch(mboost::glmboost(y=times,x=data_used_for_training,family=mboost::CoxPH(),
+                                          control=mboost::boost_control(mstop=n_mstop,nu=n_nu)),error = NULL)
       #predictions
       if (!is.null(coxboost_model)) {
-        MCB_coxboost_matrix_training[mcb,]<-stats::predict(coxboost_model, data.frame(t(training_set[CpGs,])))$predicted
+        MCB_coxboost_matrix_training[mcb,]<-stats::predict(coxboost_model, t(training_set[CpGs,]))[,1]
         auc_and_ci = calculate_auc_ci(survival = times,marker = MCB_coxboost_matrix_training[mcb,rz],predict_time,ci)
         write_MCB['AUC_train']<-auc_and_ci$AUC
         if (ci) write_MCB['95_CI_train']<-auc_and_ci$CI95
         #if it has a independent test set
         if (!is.null(testing_set)){
-          MCB_coxboost_matrix_test_set[mcb,]<-stats::predict(coxboost_model, data.frame(t(testing_set[CpGs,])))$predicted
+          MCB_coxboost_matrix_test_set[mcb,]<-stats::predict(coxboost_model, t(testing_set[CpGs,]))[,1]
           auc_and_ci = calculate_auc_ci(Surv.new,marker = MCB_coxboost_matrix_test_set[mcb,],predict_time,ci)
           write_MCB['AUC_test']<-auc_and_ci$AUC
           if (ci) write_MCB['95_CI_test']<-auc_and_ci$CI95
-          if (abs(write_MCB['AUC_train']+write_MCB['AUC_test']-1)>best_auc){
-            best_auc<-abs(write_MCB['AUC_train']+write_MCB['AUC_test']-1)
+          if ((write_MCB['AUC_train']+write_MCB['AUC_test'])>best_auc){
+            best_auc<-write_MCB['AUC_train']+write_MCB['AUC_test']
             best_model<-list(mcb,coxboost_model)
           }
           #if it does not have a independent test set
         }else{
           write_MCB<-write_MCB[1:3]
-          if (abs(write_MCB['AUC_train']-0.5)>best_auc){
-            best_auc<-abs(write_MCB['AUC_train']-0.5)+0.5
+          if (write_MCB['AUC_train']>best_auc){
+            best_auc<-write_MCB['AUC_train']
             best_model<-list(mcb,coxboost_model)
           }
         }
