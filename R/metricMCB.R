@@ -20,7 +20,7 @@
 #' @param alpha The elasticnet mixing parameter, with 0 ≤ alpha ≤ 1. alpha=1 is the lasso penalty, and alpha=0 the ridge penalty. It works only when "enet" Method is selected.
 #' @param n_mstop an integer giving the number of initial boosting iterations. If mstop = 0, the offset model is returned. It works only when "coxboost" Method is selected.
 #' @param n_nu a double (between 0 and 1) defining the step size or shrinkage parameter in coxboost model. It works only when "coxboost" Method is selected.
-#' @param theta penalty used in the penalized coxph model, which is theta/2 time sum of squared coefficients. default is 1
+#' @param theta penalty used in the penalized coxph model, which is theta/2 time sum of squared coefficients. default is 1. It works only when "cox" Method is selected.
 #' @author Xin Yu
 #' @keywords Methylation Correlation
 #' @examples
