@@ -32,8 +32,8 @@ Object of class \code{list} with elements:
 }
 \description{
 This function is used to partition the genome into blocks of tightly co-methylated CpG sites,
-Methylation correlated blocks. This function calculates Pearson correlation coefficients r^2 between
-the beta values of any two CpGs r^2 < CorrelationThreshold was used to identify boundaries between any two
+Methylation correlated blocks. This function calculates Pearson correlation coefficients between
+the beta values of any two CpGs < CorrelationThreshold was used to identify boundaries between any two
 adjacent markers indicating uncorrelated methylation. Markers not separated by a boundary were combined into MCB. Pearson correlation coefficients between
 two adjacent CpGs were calculated.
 }

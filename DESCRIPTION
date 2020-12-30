@@ -8,7 +8,7 @@ Maintainer: Xin Yu <whirlsyu@gmail.com>
 Depends: R (>= 4.0)
 Encoding: UTF-8
 Imports: foreach, doParallel, parallel, stats, survivalROC, glmnet, rms, mboost,
-    survivalsvm, ggplot2, IlluminaHumanMethylation450kanno.ilmn12.hg19,
+    survivalsvm, ggplot2, IlluminaHumanMethylation450kanno.ilmn12.hg19, minfi, boot,
     survival, utils
 VignetteBuilder: knitr
 Suggests: 

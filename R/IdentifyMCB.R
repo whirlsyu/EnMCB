@@ -1,8 +1,8 @@
 #' @title  Identification of methylation correlated blocks
 #'
 #' @description This function is used to partition the genome into blocks of tightly co-methylated CpG sites,
-#' Methylation correlated blocks. This function calculates Pearson correlation coefficients r^2 between
-#' the beta values of any two CpGs r^2 < CorrelationThreshold was used to identify boundaries between any two
+#' Methylation correlated blocks. This function calculates Pearson correlation coefficients between
+#' the beta values of any two CpGs < CorrelationThreshold was used to identify boundaries between any two
 #' adjacent markers indicating uncorrelated methylation. Markers not separated by a boundary were combined into MCB. Pearson correlation coefficients between
 #' two adjacent CpGs were calculated.
 #'
@@ -49,7 +49,7 @@ IdentifyMCB<-function(
   }
   cat("Start calculating the correlation, this may take a while...\n")
   FunctionResults<-list()
-  Illumina_Infinium_Human_Methylation_450K<-getAnnotation("IlluminaHumanMethylation450kanno.ilmn12.hg19")
+  Illumina_Infinium_Human_Methylation_450K<-minfi::getAnnotation("IlluminaHumanMethylation450kanno.ilmn12.hg19")
   met_cg_allgene<-Illumina_Infinium_Human_Methylation_450K[rownames(MethylationProfile),]
   chromosomes<-unique(met_cg_allgene[,'chr'])
   chromosomes<-chromosomes[order(chromosomes)]
@@ -76,7 +76,7 @@ IdentifyMCB<-function(
     total<-nrow(met_matrix)
     for (i in seq_len(total)) {
       # To investigate whether this indeed is evident in our data, we calculated Pearson
-      # correlation coefficients r2 between beta values of any two CpGs positioned within
+      # correlation coefficients between beta values of any two CpGs positioned within
       # one kilobase (or indicated by PositionGap) of one another
       if (i+1<=total){
         if(as.numeric(ann_matrix[i+1,'pos'])-as.numeric(ann_matrix[i,'pos'])<PositionGap &

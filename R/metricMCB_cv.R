@@ -112,9 +112,19 @@ metricMCB.cv<-function(
                                                  type = "regression"),
                         error = function(e){warning(paste('SVR can not be built, error occurs:', e));return(NULL)})
       }else if(Method=="cox"){
-        model<-tryCatch(survival::coxph(times ~ ., 
-                                        data_used_for_training),
-                        error = function(e){return(NULL)})
+        data_used_for_training = data.frame(allvars = as.ridgemat(data_used_for_training))
+        if (length(CpGs)<20){
+          model<-tryCatch(survival::coxph(times ~ allvars, 
+                                data_used_for_training),
+                error = function(e){return(NULL)})
+        }else{
+          model<-tryCatch(ridge_model(times, data_used_for_training),
+                          error = function(e){return(NULL)})
+        }
+        if (!is.null(model)){
+          model$CpGs <- CpGs
+          model <- as.mcb.coxph.penal(model)
+        }
       }else if(Method=="enet"){
         model<-tryCatch( glmnet::cv.glmnet(data_used_for_training,
                                            times,
