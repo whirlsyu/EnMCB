@@ -32,7 +32,7 @@ Surv.new,Method,predict_time,ci,silent,alpha,n_mstop,n_nu,theta)
 
 \item{n_nu}{a double (between 0 and 1) defining the step size or shrinkage parameter in coxboost model. It works only when "coxboost" Method is selected.}
 
-\item{theta}{penalty used in the penalized coxph model, which is theta/2 time sum of squared coefficients. default is 1}
+\item{theta}{penalty used in the penalized coxph model, which is theta/2 time sum of squared coefficients. default is 1. It works only when "cox" Method is selected.}
 }
 \value{
 Object of class \code{list} with elements (XXX will be replaced with the model name you choose):

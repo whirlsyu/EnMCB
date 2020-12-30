@@ -26,7 +26,7 @@ Method,predict_time,alpha,n_mstop,n_nu,theta,silent)
 
 \item{n_nu}{a double (between 0 and 1) defining the step size or shrinkage parameter in coxboost model. It works only when "coxboost" Method is selected.}
 
-\item{theta}{penalty used in the penalized coxph model, which is theta/2 time sum of squared coefficients. default is 1}
+\item{theta}{penalty used in the penalized coxph model, which is theta/2 time sum of squared coefficients. default is 1. It works only when "cox" Method is selected.}
 
 \item{silent}{Ture indicates that processing information and progress bar will be shown.}
 }
