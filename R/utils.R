@@ -543,7 +543,7 @@ ensemble_prediction.m<- function(ensemble_model,predition_data) {
   }
   svm<-stats::predict(ensemble_model$svm$svm_model, data.frame(t(predition_data)))$predicted
   cox<-stats::predict(ensemble_model$cox$cox_model, data.frame(t(predition_data)))
-  enet<-stats::predict(ensemble_model$enet$`enet model`,t(predition_data),s=ensemble_model$enet$`corrected lambda(min)`)
+  enet<-stats::predict(ensemble_model$enet$enet_model,t(predition_data),s=ensemble_model$enet$`corrected_lambda(min)`)
   coxboost<-stats::predict(ensemble_model$coxboost$coxboost_model, t(predition_data))[,1]
   data<-rbind(cox,
               svm,
