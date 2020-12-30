@@ -25,8 +25,8 @@ You can install and test our package by downloading source package.
 ## Installation
 
 ```{r echo=TRUE,warning=FALSE,results='hide'}
-if(!requireNamespace("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
+#if(!requireNamespace("BiocManager", quietly = TRUE))
+#    install.packages("BiocManager")
 #BiocManager::install("EnMCB")
 ```
 
@@ -40,7 +40,7 @@ You can automatically run following:
 
 ```{r echo=TRUE,warning=FALSE,results='hide'}
 
-library(EnMCB)
+suppressPackageStartupMessages(library(EnMCB))
 
 methylation_dataset<-create_demo()
 
@@ -63,7 +63,7 @@ and select some of MCBs for further modeling.
 
 ```{r echo=TRUE,warning=FALSE,results='hide'}
 
-MCB<-MCB[MCB[,"CpGs_num"]>2,]
+MCB<-MCB[MCB[,"CpGs_num"]>=5,]
 
 ```
 
@@ -82,20 +82,19 @@ data(demo_survival_data)
 models<-metricMCB(MCB,
                     training_set = methylation_dataset[,trainingset],
                     Surv = demo_survival_data[trainingset],
-                    Method = "cox")
+                    Method = "cox",ci = TRUE)
 
 #select the best
-onemodel<-models$best_cox_model[[2]]
+onemodel<-models$best_cox_model$cox_model
 
 ```                    
 
 Then, you can predict the risk by the model you build:
 
 ```{r echo=TRUE,warning=FALSE,results='hide'}
-
-prediction_results<-predict(onemodel,
-                            as.data.frame(t(methylation_dataset[,testingset]))
-                            )
+newcgdata<-data.frame(t(methylation_dataset[,testingset]))
+           
+prediction_results<-predict(onemodel, newcgdata)
 ```
 
 In order to build ensemble model, one may run following:

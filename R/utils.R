@@ -22,85 +22,141 @@ print_as_data <- function(variables,file) {
   sink()
 }
 
-#inherent from minifi package to reduce the dependencies
-getAnnotation <- function(object, what = "everything", lociNames = NULL,
-                          orderByLocation = FALSE, dropNonMapping = FALSE) {
-  .annoGet <- function(what, envir) {
-    pointer <- get(what, envir = envir)
-    if (is(pointer, "DataFrame")) return(pointer)
-    get(pointer$what, envir = as.environment(pointer$envir))
-  }
-  getAnnotationObject <- function(object) {
-    if (is.character(object)) {
-      if (!require(object, character.only = TRUE)) {
-        stop(sprintf("cannot load annotation package %s", object))
-      }
-      object <- get(object)
-    }
-    if (!is(object, "IlluminaMethylationAnnotation")) {
-      stop("Could not locate annotation object for 'object' of class",
-           class(object))
-    }
-    object
-  }
-  .availableAnnotation <- function(object) {
-    object <- getAnnotationObject(object)
-    allAnnoNames <- ls(object@data)
-    annoClasses <- sub("\\..*", "", allAnnoNames)
-    annoClassesChoices <- sub(".*\\.", "", allAnnoNames)
-    annoClassesChoices[grep("\\.", allAnnoNames, invert = TRUE)] <- ""
-    annoClassesChoices <- split(annoClassesChoices, annoClasses)
-    annoClasses <- unique(annoClasses)
-    defaults <- object@defaults
-    out <- list(
-      names = allAnnoNames,
-      classes = annoClasses,
-      classChoices = annoClassesChoices,
-      defaults = defaults)
-    out
-  }
-  # Processing of arguments and check
-  annoObject <- getAnnotationObject(object)
-  available <- .availableAnnotation(annoObject)
-  if ("everything" %in% what)  what <- available$defaults
-  if (!(all(what %in% available$names))) {
-    stop("the value of argument 'what' is not part of the annotation ",
-         "package or 'everything'")
-  }
-  n_choices <- vapply(
-    available$classes,
-    function(cl) length(grep(cl, what)),
-    integer(1))
-  if (any(n_choices > 1)) stop("only one choice per allowable class")
-  if (!any(grepl("^Locations", what)) &&
-      (orderByLocation || dropNonMapping)) {
-    stop("To use 'orderbyLocation' or 'dropNonMapping' specify Locations ",
-         "as part of 'what'")
-  }
-  # TODO: Ensure same order always
-  # Old code for inspiration
-  # bestOrder <- c("Locations", "Manifest", "IlluminaSNPs", "Annotation")
-  # what <- bestOrder[bestOrder %in% what]
-  
-  out <- do.call(cbind, lapply(what, function(wh) {
-    .annoGet(wh, envir = annoObject@data)
-  }))
-  
-  if (!is.null(lociNames)) {
-    lociNames <- lociNames[lociNames %in% rownames(out)]
-  }
-  if (is(object, "MethylSet") || is(object, "RatioSet") ||
-      is(object, "GenomicMethylSet") || is(object, "GenomicRatioSet")) {
-    rNames <- rownames(object)
-    if (is.null(lociNames)) {
-      lociNames <- rNames[rNames %in% rownames(out)]
-    } else {
-      lociNames <- rNames[rNames %in% lociNames]
-    }
-  }
-  if (!is.null(lociNames)) out <- out[match(lociNames, rownames(out)),]
-  out
+ridge_model <- function(times,data_used_for_training,theta = 1){
+  survival::coxph(times ~ survival::ridge(allvars,theta = theta),data=data_used_for_training)
 }
+
+#' @title ridge matrix
+#' @description as.matrix attempts to turn its argument 
+#' @param x data vector
+#' @usage as.ridgemat(x)
+#' @export
+as.ridgemat <- function(x) {
+  class(x) <- c("ridgemat", class(x))
+  x
+}
+
+as.mcb.coxph.penal <- function(x){
+  class(x) <- c("mcb.coxph.penal", class(x))
+  x
+}
+
+removeobjectclass<- function(x){
+  class(x) <- setdiff(class(x),"mcb.coxph.penal")
+  x
+}
+
+#' @title data frame ridge matrix
+#' @description data frame ridge matrix
+#' @param x data vector
+#' @param ... other parameters pass to as.data.frame.model.matrix()
+#' @method as.data.frame ridgemat
+#' @export
+as.data.frame.ridgemat <- function(x, ...) {
+  as.data.frame.model.matrix(as.matrix(x), ...)
+}
+
+
+#'@title predict coxph penal using MCB
+#'@author Xin Yu
+#'@description Compute fitted values and regression terms for a model fitted by coxph
+#'@param object the results of a coxph fit.
+#'@param newdata Optional new data at which to do predictions. If absent predictions are for the data frame used in the original fit. 
+#'When coxph has been called with a formula argument created in another context, i.e., coxph has been called within another function and the formula was passed as an argument to that function, 
+#'there can be problems finding the data set. See the note below.
+#'@param ... other parameters pass to predict.coxph
+#'@method predict mcb.coxph.penal
+#'@return prediction values of regression.
+#'@export
+predict.mcb.coxph.penal <- function(object,newdata,...){
+  internames = colnames(newdata) %in% object$CpGs
+  if (sum(internames) == length(object$CpGs)){
+    newdata <- data.frame(allvars = as.ridgemat(newdata[,internames]))
+    object = removeobjectclass(object)
+    return(predict(object,newdata,...))
+  }else{
+    stop('newdata do not contain sufficient CpGs in the model')
+  }
+}
+#inherent from minifi package to reduce the dependencies
+# getAnnotation <- function(object, what = "everything", lociNames = NULL,
+#                           orderByLocation = FALSE, dropNonMapping = FALSE) {
+#   .annoGet <- function(what, envir) {
+#     pointer <- get(what, envir = envir)
+#     if (is(pointer, "DataFrame")) return(pointer)
+#     get(pointer$what, envir = as.environment(pointer$envir))
+#   }
+#   getAnnotationObject <- function(object) {
+#     if (is.character(object)) {
+#       if (!require(object, character.only = TRUE)) {
+#         stop(sprintf("cannot load annotation package %s", object))
+#       }
+#       object <- get(object)
+#     }
+#     if (!is(object, "IlluminaMethylationAnnotation")) {
+#       stop("Could not locate annotation object for 'object' of class",
+#            class(object))
+#     }
+#     object
+#   }
+#   .availableAnnotation <- function(object) {
+#     object <- getAnnotationObject(object)
+#     allAnnoNames <- ls(object@data)
+#     annoClasses <- sub("\\..*", "", allAnnoNames)
+#     annoClassesChoices <- sub(".*\\.", "", allAnnoNames)
+#     annoClassesChoices[grep("\\.", allAnnoNames, invert = TRUE)] <- ""
+#     annoClassesChoices <- split(annoClassesChoices, annoClasses)
+#     annoClasses <- unique(annoClasses)
+#     defaults <- object@defaults
+#     out <- list(
+#       names = allAnnoNames,
+#       classes = annoClasses,
+#       classChoices = annoClassesChoices,
+#       defaults = defaults)
+#     out
+#   }
+#   # Processing of arguments and check
+#   annoObject <- getAnnotationObject(object)
+#   available <- .availableAnnotation(annoObject)
+#   if ("everything" %in% what)  what <- available$defaults
+#   if (!(all(what %in% available$names))) {
+#     stop("the value of argument 'what' is not part of the annotation ",
+#          "package or 'everything'")
+#   }
+#   n_choices <- vapply(
+#     available$classes,
+#     function(cl) length(grep(cl, what)),
+#     integer(1))
+#   if (any(n_choices > 1)) stop("only one choice per allowable class")
+#   if (!any(grepl("^Locations", what)) &&
+#       (orderByLocation || dropNonMapping)) {
+#     stop("To use 'orderbyLocation' or 'dropNonMapping' specify Locations ",
+#          "as part of 'what'")
+#   }
+#   # TODO: Ensure same order always
+#   # Old code for inspiration
+#   # bestOrder <- c("Locations", "Manifest", "IlluminaSNPs", "Annotation")
+#   # what <- bestOrder[bestOrder %in% what]
+#   
+#   out <- do.call(cbind, lapply(what, function(wh) {
+#     .annoGet(wh, envir = annoObject@data)
+#   }))
+#   
+#   if (!is.null(lociNames)) {
+#     lociNames <- lociNames[lociNames %in% rownames(out)]
+#   }
+#   if (is(object, "MethylSet") || is(object, "RatioSet") ||
+#       is(object, "GenomicMethylSet") || is(object, "GenomicRatioSet")) {
+#     rNames <- rownames(object)
+#     if (is.null(lociNames)) {
+#       lociNames <- rNames[rNames %in% rownames(out)]
+#     } else {
+#       lociNames <- rNames[rNames %in% lociNames]
+#     }
+#   }
+#   if (!is.null(lociNames)) out <- out[match(lociNames, rownames(out)),]
+#   out
+# }
 
 test_logrank_p_in_KM<-function(mcb_matrix,y_surv){
   p.val_all<-NULL
@@ -206,9 +262,6 @@ multiple_time_ROC <- function(Test,y_surv,genesel) {
          path = getwd(),dpi = 300,units = "in",width = 5, height = 4.5,
          limitsize=FALSE)
 }
-
-
-
 
 draw_pheatmap_matrix<-function(eSet_matrix,group,savename="draw_pheatmap_matrix",scale = FALSE){
   requireNamespace(pheatmap)
@@ -346,14 +399,15 @@ mutiple_time_ROC <- function(Test,y_surv,genesel) {
 #'@title draw survival curve
 #'@author Xin Yu
 #'@description Draw a survival curve based on survminer package. This is a wrapper function of ggsurvplot.
-#'@param exp expression level for gene.
+#'@param exp expression level for variable.
 #'@param living_days The survival time (days) for each individual.
 #'@param living_events The survival event for each individual, 0 indicates alive and 1 indicates death.
 #'Other choices are TRUE/FALSE (TRUE = death) or 1/2 (2=death). For interval censored data, the status indicator is 0=right censored, 1=event at time, 2=left censored, 3=interval censored.
 #'@param write_name The name for pdf file which contains the result figure.
 #'@param title_name The title for the result figure.
 #'@param threshold Threshold used to indicate the high risk or low risk.
-#'
+#'@param file If True, function will automatic generate a result pdf, otherwise it will
+#'return a ggplot object. Default is FALSE.
 #'
 #'@return This function will generate a pdf file with 300dpi which compare survival curves using the Kaplan-Meier (KM) test.
 #'@export
@@ -366,7 +420,7 @@ mutiple_time_ROC <- function(Test,y_surv,genesel) {
 #'     living_events =demo_survival_data[,2],
 #'     write_name = "demo_data" )
 #'
-draw_survival_curve<-function(exp,living_days,living_events,write_name,title_name="",threshold=NA){
+draw_survival_curve<-function(exp,living_days,living_events,write_name,title_name="",threshold=NA,file = FALSE){
   if (is.na(threshold)) threshold=median(exp)
   group_sur<-factor(1*(exp >threshold) ,
                     levels=0:1,
@@ -400,9 +454,14 @@ draw_survival_curve<-function(exp,living_days,living_events,write_name,title_nam
     legend.position=c(1,1), legend.justification=c(1,1),
     legend.background = ggplot2::element_rect(fill = 'white', colour = 'white'))
   )
-  ggplot2::ggsave(filename = paste("survival of ",write_name,".jpeg",sep=""),plot = print(gg),device ="jpeg" ,
-         path = getwd(),dpi = 300,units = "in",width = 5, height = 5,
-         limitsize=FALSE)
+  if (file){
+    ggplot2::ggsave(filename = paste("survival of ",write_name,".jpeg",sep=""),plot = print(gg),device ="jpeg" ,
+                    path = getwd(),dpi = 300,units = "in",width = 5, height = 5,
+                    limitsize=FALSE)
+  }else{
+    return(gg)
+  }
+
 }
 
 
@@ -424,11 +483,11 @@ bs_ci <- function(data, indices, predict.time) {
 
 calculate_auc_ci <- function(survival, marker, predict_time,ci){
   if (ci){
-    ci_res = boot(data=data.frame(survival = survival[,1],
+    ci_res = boot::boot(data=data.frame(survival = survival[,1],
                                     survival_status = survival[,2],
                                     marker = marker),
                     statistic=bs_ci, R=1000, predict.time = predict_time)
-    res = boot.ci(ci_res,type="perc")
+    res = boot::boot.ci(ci_res,type="perc")
     return(list( AUC = res$t0, 
                  CI95 = paste(format(res$percent[,4], digits = 4),"-", format(res$percent[,5], digits = 4))
     ))
@@ -478,7 +537,7 @@ metricMCB.mean<-function(MCBset,MCB_matrix,Surv,data_set,show_bar=T){
 
 
 ensemble_prediction.m<- function(ensemble_model,predition_data) {
-  predition_data<-predition_data[rownames(predition_data) %in% names(coef(ensemble_model$cox$cox_model)),]
+  predition_data<-predition_data[rownames(predition_data) %in% ensemble_model$cox$cox_model$CpGs,]
   if (nrow(predition_data)!=length(rownames(predition_data))) {
     stop("ERROR: The predition data and the model have wrong dimensions!")
   }

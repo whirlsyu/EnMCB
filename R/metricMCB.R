@@ -5,7 +5,8 @@
 #' define the methylated pattern of multiple CpG sites within each block.
 #' Compound scores which calculated all CpGs within individual Methylation Correlation Blocks by linear, SVM or elastic-net model
 #' Predict values were used as the compound methylation values of Methylation Correlation Blocks.
-#' @usage metricMCB(MCBset,training_set,Surv,testing_set,Surv.new,Method,predict_time,ci,silent,alpha,n_mstop,n_nu)
+#' @usage metricMCB(MCBset,training_set,Surv,testing_set,
+#' Surv.new,Method,predict_time,ci,silent,alpha,n_mstop,n_nu,theta)
 #' @export
 #' @param training_set methylation matrix used for training the model in the analysis.
 #' @param testing_set methylation matrix used in the analysis. This can be missing then training set itself will be used as testing set.
@@ -19,6 +20,7 @@
 #' @param alpha The elasticnet mixing parameter, with 0 ≤ alpha ≤ 1. alpha=1 is the lasso penalty, and alpha=0 the ridge penalty. It works only when "enet" Method is selected.
 #' @param n_mstop an integer giving the number of initial boosting iterations. If mstop = 0, the offset model is returned. It works only when "coxboost" Method is selected.
 #' @param n_nu a double (between 0 and 1) defining the step size or shrinkage parameter in coxboost model. It works only when "coxboost" Method is selected.
+#' @param theta penalty used in the penalized coxph model, which is theta/2 time sum of squared coefficients. default is 1
 #' @author Xin Yu
 #' @keywords Methylation Correlation
 #' @examples
@@ -50,7 +52,7 @@
 #'  }
 #' @references
 #' Xin Yu et al. 2019 Predicting disease progression in lung adenocarcinoma patients based on methylation correlated blocks using ensemble machine learning classifiers (under review)
-#'
+#' @importFrom mboost glmboost predict.glmboost CoxPH boost_control
 metricMCB<-function(
   MCBset,
   training_set,
@@ -63,7 +65,8 @@ metricMCB<-function(
   silent=FALSE,
   alpha = 0.5,
   n_mstop = 500,
-  n_nu = 0.1
+  n_nu = 0.1,
+  theta = 1
   ){
   requireNamespace("stats")
   # load private functions
@@ -75,7 +78,7 @@ metricMCB<-function(
                            predict.time = predict.time, method = "NNE",
                            span = 0.25*NROW(d)^(-0.20))
     return(surv.res$AUC)
-    }
+  }
   # end load
   
   if (!silent) {
@@ -205,35 +208,37 @@ metricMCB<-function(
       # MCB number
       # aquire information for CpG sites in MCB
       CpGs<-strsplit(MCBset[mcb,'CpGs']," ")[[1]]
-      data_used_for_training<-data.frame(t(training_set[CpGs,rz]))
-      # train a cox model
-      if (ncol(data_used_for_training)<10){
-        univ_models<-tryCatch(survival::coxph(times ~.,data=data_used_for_training),error = NULL)
+      data_used_for_training<-data.frame(allvars = as.ridgemat(t(training_set[CpGs,rz])))
+      # train a ridge cox model
+      if (length(CpGs)<=2){
+        ridge_models<-tryCatch(survival::coxph(times ~ allvars,data=data_used_for_training),error = NULL)
       }else{
-        univ_models<-tryCatch(survival::coxph(times ~.,data=data_used_for_training),error = NULL)
+        ridge_models<-tryCatch(ridge_model(times,data_used_for_training,theta = theta),error = NULL)        
       }
       #predictions
-      if (!is.null(univ_models)) {
-        MCB_cox_matrix_training[mcb,]<-stats::predict(univ_models, data.frame(t(training_set[CpGs,])))
+      if (!is.null(ridge_models)) {
+        ridge_models$CpGs <- CpGs
+        ridge_models <- as.mcb.coxph.penal(ridge_models)
+        MCB_cox_matrix_training[mcb,]<-predict.mcb.coxph.penal(ridge_models, data.frame(t(training_set[CpGs,])))
         auc_and_ci = calculate_auc_ci(survival = times,marker = MCB_cox_matrix_training[mcb,rz],predict_time,ci)
         write_MCB['AUC_train']<-auc_and_ci$AUC
         if (ci) write_MCB['95_CI_train']<-auc_and_ci$CI95
         #if it has a independent test set
         if (!is.null(testing_set)){
-          MCB_cox_matrix_test_set[mcb,]<-stats::predict(univ_models, data.frame(t(testing_set[CpGs,])))
+          MCB_cox_matrix_test_set[mcb,]<-predict.mcb.coxph.penal(ridge_models, data.frame(t(testing_set[CpGs,])))
           auc_and_ci = calculate_auc_ci(Surv.new,marker = MCB_cox_matrix_test_set[mcb,],predict_time,ci)
           write_MCB['AUC_test']<-auc_and_ci$AUC
           if (ci) write_MCB['95_CI_test']<-auc_and_ci$CI95
           if ((write_MCB['AUC_train']+write_MCB['AUC_test'])>best_auc){
             best_auc<-write_MCB['AUC_train']+write_MCB['AUC_test']
-            best_model<-list(mcb,univ_models)
+            best_model<-list(mcb,ridge_models)
           }
           #if it does not have a independent test set
         }else{
           write_MCB<-write_MCB[1:3]
           if (write_MCB['AUC_train']>best_auc){
             best_auc<-write_MCB['AUC_train']
-            best_model<-list(mcb,univ_models)
+            best_model<-list(mcb,ridge_models)
           }
         }
       }else{

@@ -10,11 +10,12 @@ draw_survival_curve(
   living_events,
   write_name,
   title_name = "",
-  threshold = NA
+  threshold = NA,
+  file = FALSE
 )
 }
 \arguments{
-\item{exp}{expression level for gene.}
+\item{exp}{expression level for variable.}
 
 \item{living_days}{The survival time (days) for each individual.}
 
@@ -26,6 +27,9 @@ Other choices are TRUE/FALSE (TRUE = death) or 1/2 (2=death). For interval censo
 \item{title_name}{The title for the result figure.}
 
 \item{threshold}{Threshold used to indicate the high risk or low risk.}
+
+\item{file}{If True, function will automatic generate a result pdf, otherwise it will
+return a ggplot object. Default is FALSE.}
 }
 \value{
 This function will generate a pdf file with 300dpi which compare survival curves using the Kaplan-Meier (KM) test.

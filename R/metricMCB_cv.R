@@ -5,13 +5,19 @@
 #' define the methylated pattern of multiple CpG sites within each block.
 #' Compound scores which calculated all CpGs within individual Methylation Correlation Blocks by SVM model
 #' were used as the compound methylation values of Methylation Correlation Blocks.
-#' @usage metricMCB.cv(MCBset,data_set,Surv,nfold,Method,silent)
+#' @usage metricMCB.cv(MCBset,data_set,Surv,nfold,
+#' Method,predict_time,alpha,n_mstop,n_nu,theta,silent)
 #' @export
 #' @param MCBset Methylation Correlation Block information returned by the IndentifyMCB function.
 #' @param data_set methylation matrix used for training the model in the analysis.
 #' @param Surv Survival function contain the survival information for training.
 #' @param nfold fold used in the cross validation precedure.
-#' @param Method model used to calculate the compound values for multiple Methylation correlation blocks. Options include "svm" "cox" and "enet". The default option is SVM method.
+#' @param Method model used to calculate the compound values for multiple Methylation correlation blocks. Options include "svm", "cox", "coxboost", and "enet". The default option is SVM method.
+#' @param predict_time time point of the ROC curve used in the AUC calculations, default is 5 years.
+#' @param alpha The elasticnet mixing parameter, with 0 ≤ alpha ≤ 1. alpha=1 is the lasso penalty, and alpha=0 the ridge penalty. It works only when "enet" Method is selected.
+#' @param n_mstop an integer giving the number of initial boosting iterations. If mstop = 0, the offset model is returned. It works only when "coxboost" Method is selected.
+#' @param n_nu a double (between 0 and 1) defining the step size or shrinkage parameter in coxboost model. It works only when "coxboost" Method is selected.
+#' @param theta penalty used in the penalized coxph model, which is theta/2 time sum of squared coefficients. default is 1
 #' @param silent Ture indicates that processing information and progress bar will be shown.
 #' @author Xin Yu
 #' @keywords Methylation Correlation
@@ -38,13 +44,19 @@
 #'  }
 #' @references
 #' Xin Yu et al. 2019 Predicting disease progression in lung adenocarcinoma patients based on methylation correlated blocks using ensemble machine learning classifiers (under review)
-#'
+#' @importFrom mboost glmboost predict.glmboost CoxPH boost_control
+#' 
 metricMCB.cv<-function(
   MCBset,
   data_set,
   Surv,
   nfold=10,
-  Method=c("svm","cox","enet")[1],
+  Method=c("svm","cox","enet","coxboost")[1],
+  predict_time = 5,
+  alpha = 0.5,
+  n_mstop = 500,
+  n_nu = 0.1,
+  theta = 1,
   silent=FALSE
 ){
   requireNamespace("stats")
@@ -73,7 +85,7 @@ metricMCB.cv<-function(
   MCB_matrix<-matrix(0,nrow = nrow(MCBset),ncol = ncol(data_set))
   colnames(MCB_matrix)<-colnames(data_set)
   rownames(MCB_matrix)<-as.numeric(MCBset[,'MCB_no'])
-  if (!Method %in% c("svm","cox","enet")){
+  if (!Method %in% c("svm","cox","enet","coxboost")){
     stop(paste("Method:",Method,"is not supported, see hlep files for the details.",collapse = " "))
   }
   sp<-sample(1:ncol(data_set),replace = F)
@@ -112,15 +124,25 @@ metricMCB.cv<-function(
                                                  type = "regression"),
                         error = function(e){warning(paste('SVR can not be built, error occurs:', e));return(NULL)})
       }else if(Method=="cox"){
-        model<-tryCatch(survival::coxph(times ~ ., 
-                                        data_used_for_training),
-                        error = function(e){return(NULL)})
+        data_used_for_training = data.frame(allvars = as.ridgemat(data_used_for_training))
+        if (length(CpGs)<20){
+          model<-tryCatch(survival::coxph(times ~ allvars, 
+                                data_used_for_training),
+                error = function(e){return(NULL)})
+        }else{
+          model<-tryCatch(ridge_model(times, data_used_for_training, theta),
+                          error = function(e){return(NULL)})
+        }
+        if (!is.null(model)){
+          model$CpGs <- CpGs
+          model <- as.mcb.coxph.penal(model)
+        }
       }else if(Method=="enet"){
         model<-tryCatch( glmnet::cv.glmnet(data_used_for_training,
                                            times,
                                            #cox model in enet was used, note that here penalty were used.
                                            family="cox",
-                                           alpha=0.5,
+                                           alpha=alpha,
                                            # The elasticnet mixing parameter, with 0≤α≤ 1. The penalty is defined as
                                            # (1-alpha)/2||beta||_2^2+alpha||beta||_1
                                            # alpha=1 is the lasso penalty, and alpha=0 the ridge penalty.
@@ -135,8 +157,10 @@ metricMCB.cv<-function(
           correctional_value=correctional_value*1.25
         }
         lambda_min_corrected<-model$lambda.min-0.001*(correctional_value-1)
+      }else if (Method=="coxboost"){
+        model <- tryCatch(mboost::glmboost(y=times,x=data_used_for_training,family=mboost::CoxPH(),
+                                                    control=mboost::boost_control(mstop=n_mstop,nu=n_nu)),error = NULL)
       }
-      
       if (!is.null(model)) {
         #predictions
         if (Method=="svm") MCB_matrix[mcb,rz]<-stats::predict(model,data_used_for_testing)$predicted
@@ -145,6 +169,7 @@ metricMCB.cv<-function(
           #if you use lambda.1se instead, the penalty of enet would be larger, leading that most of covariates were removed form the final model.
           MCB_matrix[mcb,rz]<-stats::predict(model,data_used_for_testing,s=lambda_min_corrected)
         }
+        if (Method=="coxboost")MCB_matrix[mcb,rz] <- stats::predict(model, data_used_for_testing)[,1]
       }else{
         MCB_matrix[mcb,rz]<-NA
       }
@@ -154,11 +179,9 @@ metricMCB.cv<-function(
       AUC_value<-survivalROC::survivalROC(Stime = Surv[,1],
                                           status = Surv[,2],
                                           marker = MCB_matrix[mcb,],
-                                          predict.time = 5,
+                                          predict.time = predict_time,
                                           method = "NNE",
                                           span =0.25*length(Surv)^(-0.20))$AUC
-      # if (AUC_value<0.5) AUC_value = 1 - AUC_value
-      # write_MCB[3]<-AUC_value
       cindex<-survival::survConcordance(Surv ~ MCB_matrix[mcb,])
       write_MCB[4]<-cindex$concordance
       write_MCB[5]<-cindex$std.err
