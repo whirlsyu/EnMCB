@@ -115,7 +115,7 @@ Then, you can predict the risk by the model you build:
 
 ```{r echo=TRUE,warning=FALSE,results='hide'}
 em_prediction_results<-ensemble_prediction(ensemble_model = em,
-                    predition_data = methylation_dataset[,testingset])
+                    prediction_data = methylation_dataset[,testingset])
 ```
 
 This function will return the single vector with risk scores predicted by ensemble model.
