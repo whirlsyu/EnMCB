@@ -32,7 +32,7 @@ ensemble_prediction <- function(ensemble_model,prediction_data, mutiple_results 
   if (mutiple_results) {
     return(ensemble_prediction.m(ensemble_model,prediction_data))
   }
-  prediction_data<-prediction_data[rownames(prediction_data) %in% ensemble_model$cox$cox_model$CpGs,]
+  prediction_data<-prediction_data[ensemble_model$cox$cox_model$CpGs,]
   if (nrow(prediction_data)!=length(rownames(prediction_data))) {
     stop("ERROR: The predition data and the model have wrong dimensions!")
   }
