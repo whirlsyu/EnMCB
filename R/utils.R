@@ -1,19 +1,3 @@
-# env parameter
-# platform       x86_64-redhat-linux-gnu
-# arch           x86_64
-# os             linux-gnu
-# system         x86_64, linux-gnu
-# status
-# major          3
-# minor          5.0
-# year           2018
-# month          04
-# day            23
-# svn rev        74626
-# language       R
-# version.string R version 3.5.0 (2018-04-23)
-# nickname       Joy in Playing
-
 # load private functions
 
 print_as_data <- function(variables,file) {
