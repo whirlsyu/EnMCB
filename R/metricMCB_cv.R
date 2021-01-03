@@ -176,6 +176,16 @@ metricMCB.cv<-function(
     }
     MCB_matrix[mcb,]<-MCB_matrix[mcb,order_sp]
     if (sum(is.na(MCB_matrix[mcb,])) == 0){
+      if (Method == "cox"){
+        marker_hr <- predict(survival::coxph(Surv~MCB_matrix[mcb,]))
+        AUC_value<-survivalROC::survivalROC(Stime = Surv[,1],
+                                            status = Surv[,2],
+                                            marker = marker_hr,
+                                            predict.time = predict_time,
+                                            method = "NNE",
+                                            span =0.25*length(Surv)^(-0.20))$AUC
+        cindex<-survival::survConcordance(Surv ~ marker_hr)
+      }
       AUC_value<-survivalROC::survivalROC(Stime = Surv[,1],
                                           status = Surv[,2],
                                           marker = MCB_matrix[mcb,],

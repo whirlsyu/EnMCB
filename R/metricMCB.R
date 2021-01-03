@@ -152,18 +152,22 @@ metricMCB<-function(
       #predictions
       if (!is.null(svm_model)) {
         MCB_svm_matrix_training[mcb,]<-stats::predict(svm_model, data.frame(t(training_set[CpGs,])))$predicted
-        auc_and_ci = calculate_auc_ci(survival = times,marker = MCB_svm_matrix_training[mcb,rz],predict_time,ci)
+        rank_svm <-MCB_svm_matrix_training[mcb,rz]
+        hr_model<-survival::coxph(times~rank_svm)
+        hr_svm_train<-predict(hr_model)
+        auc_and_ci = calculate_auc_ci(survival = times,marker = hr_svm_train,predict_time,ci)
         write_MCB['AUC_train']<-auc_and_ci$AUC
         if (ci) write_MCB['95_CI_train']<-auc_and_ci$CI95
         #if it has a independent test set
         if (!is.null(testing_set)){
           MCB_svm_matrix_test_set[mcb,]<-stats::predict(svm_model, data.frame(t(testing_set[CpGs,])))$predicted
-          auc_and_ci = calculate_auc_ci(Surv.new,marker = MCB_svm_matrix_test_set[mcb,],predict_time,ci)
+          hr_svm_test<-predict(hr_model,data.frame(rank_svm = MCB_svm_matrix_test_set[mcb,]))
+          auc_and_ci = calculate_auc_ci(Surv.new,marker = hr_svm_test,predict_time,ci)
           write_MCB['AUC_test']<-auc_and_ci$AUC
           if (ci) write_MCB['95_CI_test']<-auc_and_ci$CI95
           if ((write_MCB['AUC_train']+write_MCB['AUC_test'])>best_auc){
             best_auc<-write_MCB['AUC_train']+write_MCB['AUC_test']
-            best_model<-list(mcb,svm_model)
+            best_model<-list(mcb,svm_model,hr_model)
           }
           #if it does not have a independent test set
         }else{
