@@ -1,9 +1,9 @@
 #' @title Calculation of the metric matrix for Methylation Correlation Block
 #'
-#' @description To enable quantitative analysis of the methylation patterns
-#' within individual Methylation Correlation Blocks across many samples, a single metric to
-#' define the methylated pattern of multiple CpG sites within each block.
-#' Compound scores which calculated all CpGs within individual Methylation Correlation Blocks by linear, SVM or elastic-net model
+#' @description To enable quantitative analysis of the methylation patterns \cr
+#' within individual Methylation Correlation Blocks across many samples, a single metric to \cr
+#' define the methylated pattern of multiple CpG sites within each block.\cr
+#' Compound scores which calculated all CpGs within individual Methylation Correlation Blocks by linear, SVM or elastic-net model\cr
 #' Predict values were used as the compound methylation values of Methylation Correlation Blocks.
 #' @usage metricMCB(MCBset,training_set,Surv,testing_set,
 #' Surv.new,Method,predict_time,ci,silent,alpha,n_mstop,n_nu,theta)
@@ -13,14 +13,19 @@
 #' @param MCBset Methylation Correlation Block information returned by the IndentifyMCB function.
 #' @param Surv Survival function contain the survival information for training.
 #' @param Surv.new Survival function contain the survival information for testing.
-#' @param Method model used to calculate the compound values for multiple Methylation correlation blocks. Options include "svm" "cox" "coxboost" and "enet". The default option is SVM method.
+#' @param Method model used to calculate the compound values for multiple Methylation correlation blocks. \cr
+#' Options include "svm" "cox" "coxboost" and "enet". The default option is SVM method.
 #' @param predict_time time point of the ROC curve used in the AUC calculations, default is 5 years.
 #' @param ci if True, the confidence intervals for AUC under area under the receiver operating characteristic curve will be calculated. This will be time consuming. default is False.
 #' @param silent True indicates that processing information and progress bar will be shown.
-#' @param alpha The elasticnet mixing parameter, with 0 ≤ alpha ≤ 1. alpha=1 is the lasso penalty, and alpha=0 the ridge penalty. It works only when "enet" Method is selected.
-#' @param n_mstop an integer giving the number of initial boosting iterations. If mstop = 0, the offset model is returned. It works only when "coxboost" Method is selected.
-#' @param n_nu a double (between 0 and 1) defining the step size or shrinkage parameter in coxboost model. It works only when "coxboost" Method is selected.
-#' @param theta penalty used in the penalized coxph model, which is theta/2 time sum of squared coefficients. default is 1. It works only when "cox" Method is selected.
+#' @param alpha The elasticnet mixing parameter, with 0 <= alpha <= 1. alpha=1 is the lasso penalty, and alpha=0 the ridge penalty. \cr
+#' It works only when "enet" Method is selected.
+#' @param n_mstop an integer giving the number of initial boosting iterations. If mstop = 0, the offset model is returned. \cr
+#' It works only when "coxboost" Method is selected.
+#' @param n_nu a double (between 0 and 1) defining the step size or shrinkage parameter in coxboost model. \cr
+#' It works only when "coxboost" Method is selected.
+#' @param theta penalty used in the penalized coxph model, which is theta/2 time sum of squared coefficients. default is 1. \cr
+#' It works only when "cox" Method is selected.
 #' @author Xin Yu
 #' @keywords Methylation Correlation
 #' @examples

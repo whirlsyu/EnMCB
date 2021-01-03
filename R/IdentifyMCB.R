@@ -1,16 +1,17 @@
 #' @title  Identification of methylation correlated blocks
 #'
-#' @description This function is used to partition the genome into blocks of tightly co-methylated CpG sites,
-#' Methylation correlated blocks. This function calculates Pearson correlation coefficients between
-#' the beta values of any two CpGs < CorrelationThreshold was used to identify boundaries between any two
-#' adjacent markers indicating uncorrelated methylation. Markers not separated by a boundary were combined into MCB. Pearson correlation coefficients between
+#' @description This function is used to partition the genome into blocks of tightly co-methylated CpG sites, \cr
+#' Methylation correlated blocks. This function calculates Pearson correlation coefficients between \cr
+#' the beta values of any two CpGs < CorrelationThreshold was used to identify boundaries between any two \cr
+#' adjacent markers indicating uncorrelated methylation. Markers not separated by a boundary were combined into MCB. Pearson correlation coefficients between \cr
 #' two adjacent CpGs were calculated.
 #'
 #' @details Currently, only illumina 450k platform is supported, the methylation profile need to convert into matrix format.
 #'
 #' @param MethylationProfile Methylation matrix is used in the analysis.
 #' @param CorrelationThreshold coef correlation threshold is used for define boundaries.
-#' @param method method used for calculation of correlation, should be one of "pearson","spearman","kendall". Defualt is "pearson".
+#' @param method method used for calculation of correlation, \cr
+#' should be one of "pearson","spearman","kendall". Defualt is "pearson".
 #' @param PositionGap CpG Gap between any two CpGs positioned CpG sites less than 1000 bp (default) will be calculated.
 #' @param platform This parameter indicates the platform used to produce the methlyation profile.
 #'

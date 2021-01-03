@@ -15,7 +15,8 @@ IdentifyMCB(
 \arguments{
 \item{MethylationProfile}{Methylation matrix is used in the analysis.}
 
-\item{method}{method used for calculation of correlation, should be one of "pearson","spearman","kendall". Defualt is "pearson".}
+\item{method}{method used for calculation of correlation, \cr
+should be one of "pearson","spearman","kendall". Defualt is "pearson".}
 
 \item{CorrelationThreshold}{coef correlation threshold is used for define boundaries.}
 
@@ -31,10 +32,10 @@ Object of class \code{list} with elements:
  }
 }
 \description{
-This function is used to partition the genome into blocks of tightly co-methylated CpG sites,
-Methylation correlated blocks. This function calculates Pearson correlation coefficients between
-the beta values of any two CpGs < CorrelationThreshold was used to identify boundaries between any two
-adjacent markers indicating uncorrelated methylation. Markers not separated by a boundary were combined into MCB. Pearson correlation coefficients between
+This function is used to partition the genome into blocks of tightly co-methylated CpG sites, \cr
+Methylation correlated blocks. This function calculates Pearson correlation coefficients between \cr
+the beta values of any two CpGs < CorrelationThreshold was used to identify boundaries between any two \cr
+adjacent markers indicating uncorrelated methylation. Markers not separated by a boundary were combined into MCB. Pearson correlation coefficients between \cr
 two adjacent CpGs were calculated.
 }
 \details{

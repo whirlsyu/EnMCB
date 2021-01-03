@@ -20,7 +20,7 @@ Method,predict_time,alpha,n_mstop,n_nu,theta,silent)
 
 \item{predict_time}{time point of the ROC curve used in the AUC calculations, default is 5 years.}
 
-\item{alpha}{The elasticnet mixing parameter, with 0 ≤ alpha ≤ 1. alpha=1 is the lasso penalty, and alpha=0 the ridge penalty. It works only when "enet" Method is selected.}
+\item{alpha}{The elasticnet mixing parameter, with 0 <= alpha <= 1. alpha=1 is the lasso penalty, and alpha=0 the ridge penalty. It works only when "enet" Method is selected.}
 
 \item{n_mstop}{an integer giving the number of initial boosting iterations. If mstop = 0, the offset model is returned. It works only when "coxboost" Method is selected.}
 
