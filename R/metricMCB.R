@@ -214,8 +214,8 @@ metricMCB<-function(
       # aquire information for CpG sites in MCB
       CpGs<-strsplit(MCBset[mcb,'CpGs']," ")[[1]]
       data_used_for_training<-data.frame(allvars = as.ridgemat(t(training_set[CpGs,rz])))
-      # train a ridge cox model
-      if (length(CpGs)<=2){
+      # train a ridge cox model when variables are more than 5
+      if (length(CpGs)<=5){
         ridge_models<-tryCatch(survival::coxph(times ~ allvars,data=data_used_for_training),error = NULL)
       }else{
         ridge_models<-tryCatch(ridge_model(times,data_used_for_training,theta = theta),error = NULL)        
