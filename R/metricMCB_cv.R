@@ -185,7 +185,7 @@ metricMCB.cv<-function(
                                             method = "NNE",
                                             span =0.25*length(Surv)^(-0.20))$AUC
         cindex<-survival::survConcordance(Surv ~ marker_hr)
-      }
+      }else{
       AUC_value<-survivalROC::survivalROC(Stime = Surv[,1],
                                           status = Surv[,2],
                                           marker = MCB_matrix[mcb,],
@@ -193,6 +193,8 @@ metricMCB.cv<-function(
                                           method = "NNE",
                                           span =0.25*length(Surv)^(-0.20))$AUC
       cindex<-survival::survConcordance(Surv ~ MCB_matrix[mcb,])
+      }
+      write_MCB[3]<-AUC_value
       write_MCB[4]<-cindex$concordance
       write_MCB[5]<-cindex$std.err
     }else{
