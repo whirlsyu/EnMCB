@@ -174,7 +174,7 @@ metricMCB<-function(
           write_MCB<-write_MCB[1:3]
           if (write_MCB['AUC_train']>best_auc){
             best_auc<-write_MCB['AUC_train']
-            best_model<-list(mcb,svm_model)
+            best_model<-list(mcb,svm_model,hr_model)
           }
         }
       }else{
@@ -183,7 +183,7 @@ metricMCB<-function(
       mcb_SVM_res<-rbind(mcb_SVM_res,write_MCB)
     }
     colnames(mcb_SVM_res)<-c("MCB_no","training_set_auc","test_set_auc")
-    names(best_model)<-c("MCB_no","svm_model")
+    names(best_model)<-c("MCB_no","svm_model","hr_model")
     FunctionResults$MCB_svm_matrix_training<-MCB_svm_matrix_training
     FunctionResults$MCB_svm_matrix_test_set<-MCB_svm_matrix_test_set
     FunctionResults$svm_auc_results<-mcb_SVM_res
@@ -388,6 +388,8 @@ metricMCB<-function(
       #predictions
       if (!is.null(coxboost_model)) {
         MCB_coxboost_matrix_training[mcb,]<-stats::predict(coxboost_model, t(training_set[CpGs,]))[,1]
+        lp_coxboost <-MCB_coxboost_matrix_training[mcb,rz]
+        hr_model<-survival::coxph(times~lp_coxboost)
         auc_and_ci = calculate_auc_ci(survival = times,marker = MCB_coxboost_matrix_training[mcb,rz],predict_time,ci)
         write_MCB['AUC_train']<-auc_and_ci$AUC
         if (ci) write_MCB['95_CI_train']<-auc_and_ci$CI95
@@ -399,14 +401,14 @@ metricMCB<-function(
           if (ci) write_MCB['95_CI_test']<-auc_and_ci$CI95
           if ((write_MCB['AUC_train']+write_MCB['AUC_test'])>best_auc){
             best_auc<-write_MCB['AUC_train']+write_MCB['AUC_test']
-            best_model<-list(mcb,coxboost_model)
+            best_model<-list(mcb,coxboost_model,hr_model)
           }
           #if it does not have a independent test set
         }else{
           write_MCB<-write_MCB[1:3]
           if (write_MCB['AUC_train']>best_auc){
             best_auc<-write_MCB['AUC_train']
-            best_model<-list(mcb,coxboost_model)
+            best_model<-list(mcb,coxboost_model,hr_model)
           }
         }
       }else{
@@ -415,7 +417,7 @@ metricMCB<-function(
       mcb_coxboost_res<-rbind(mcb_coxboost_res,write_MCB)
     }
     colnames(mcb_coxboost_res)<-c("MCB_no","training_set_auc","test_set_auc")
-    names(best_model)<-c("MCB_no","coxboost_model")
+    names(best_model)<-c("MCB_no","coxboost_model","hr_model")
     FunctionResults$MCB_coxboost_matrix_training<-MCB_coxboost_matrix_training
     FunctionResults$MCB_coxboost_matrix_test_set<-MCB_coxboost_matrix_test_set
     FunctionResults$coxboost_auc_results<-mcb_coxboost_res
