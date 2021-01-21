@@ -521,13 +521,15 @@ metricMCB.mean<-function(MCBset,MCB_matrix,Surv,data_set,show_bar=T){
 
 
 ensemble_prediction.m<- function(ensemble_model,prediction_data) {
-  prediction_data<-prediction_data[ensemble_model$cox$cox_model$CpGs,]
-  if (nrow(prediction_data)!=length(rownames(prediction_data))) {
+  prediction_data <- prediction_data[ensemble_model$cox$cox_model$CpGs,]
+  if (nrow(prediction_data) != length(rownames(prediction_data))) {
     stop("ERROR: The predition data and the model have wrong dimensions!")
   }
-  svm<-stats::predict(ensemble_model$svm$svm_model, data.frame(t(prediction_data)))$predicted
-  cox<-stats::predict(ensemble_model$cox$cox_model, data.frame(t(prediction_data)))
-  enet<-stats::predict(ensemble_model$enet$enet_model,t(prediction_data),s=ensemble_model$enet$`corrected_lambda(min)`)
+  rank_svm <- stats::predict(ensemble_model$svm$svm_model, data.frame(t(prediction_data)))$predicted[1,]
+  svm <- predict(ensemble_model$svm$hr_model,data.frame(rank_svm = rank_svm),type='lp')
+  cox <-stats::predict(ensemble_model$cox$cox_model, data.frame(t(prediction_data)))
+  enet <- stats::predict(ensemble_model$enet$enet_model, t(prediction_data), 
+                         s = ensemble_model$enet$`corrected_lambda(min)`)
   coxboost<-stats::predict(ensemble_model$coxboost$coxboost_model, t(prediction_data))[,1]
   data<-rbind(cox,
               svm,
@@ -536,8 +538,8 @@ ensemble_prediction.m<- function(ensemble_model,prediction_data) {
   )
   rownames(data)<-c('cox','svm','enet','coxboost')
   data<-t(data)
-  data_f<-as.data.frame(data)
-  ensemble = stats::predict(ensemble_model$stacking, data_f)
+  data_f<-data.frame(cox = cox,svm=rank_svm,enet=as.numeric(enet),coxboost = coxboost)
+  ensemble = stats::predict(ensemble_model$stacking, data_f,type='lp')
   return(t(cbind(data,ensemble)))
 }
 # end load
