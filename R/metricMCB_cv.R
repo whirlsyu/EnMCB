@@ -126,7 +126,7 @@ metricMCB.cv<-function(
                         error = function(e){warning(paste('SVR can not be built, error occurs:', e));return(NULL)})
       }else if(Method=="cox"){
         data_used_for_training = data.frame(allvars = as.ridgemat(data_used_for_training))
-        if (length(CpGs)<20){
+        if (length(CpGs)<5){
           model<-tryCatch(survival::coxph(times ~ allvars, 
                                 data_used_for_training),
                 error = function(e){return(NULL)})
