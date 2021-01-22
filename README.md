@@ -5,22 +5,22 @@ Type: Package
 
 Title: Predicting Disease Progression Based on Methylation Correlated Blocks using Ensemble Models
         
-Version: 0.2.0
+Version: 1.3.1
 
 Author: Xin Yu
 
 Maintainer: Xin Yu <whirlsyu@gmail.com> <yuxin@webmail.hzau.edu.cn>
 
-Description: This package is designed to help you to create the methylation correlated blocks using methylation profiles. A stacked ensemble of machine learning models, which combined the Cox regression, support vector regression and elastic-net regression model, can be constructed using this package. You also can choose one of them to build DNA methylation signatures associated with disease progression.
+Description: This package is designed to help you to create the methylation correlated blocks using methylation profiles. A stacked ensemble of machine learning models, which combined the Cox regression, support vector regression, Coxboost and elastic-net regression model, can be constructed using this package. You also can choose one of them to build DNA methylation signatures associated with disease progression (survival).
 
 License: GPL-3
 
 Citation:
-Xin Yu et al. 2019 Predicting disease progression in lung adenocarcinoma patients based on methylation correlated blocks using ensemble machine learning classifiers (under review)
+Xin Yu et al. 2021 EnMCB: an R/Bioconductor package for Predicting Disease Progression Based on Methylation Correlated Blocks using Ensemble Models (under review)
 
-Note: This package is still under developing. Some of the functions may change.
+Note: This package is still under developing. Some of the functions may be further changed.
 
-Followings are brief insturctions for using this package:
+Followings are brief instructions for using this package:
 
 You can install and test our package by downloading source package.
 
