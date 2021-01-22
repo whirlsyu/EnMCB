@@ -1,21 +1,21 @@
 Package: EnMCB
 Type: Package
 Title: Predicting Disease Progression Based on Methylation Correlated Blocks using Ensemble Models
-Version: 1.1.3
+Version: 1.3.1
 Date: 2019-10-04
 Author: Xin Yu 
 Maintainer: Xin Yu <whirlsyu@gmail.com>
 Depends: R (>= 4.0)
 Encoding: UTF-8
-Imports: foreach, doParallel, parallel, stats, survivalROC, glmnet,
-    survivalsvm, ggplot2, minfi, IlluminaHumanMethylation450kanno.ilmn12.hg19,
+Imports: foreach, doParallel, parallel, stats, survivalROC, glmnet, rms, mboost,
+    survivalsvm, ggplot2, IlluminaHumanMethylation450kanno.ilmn12.hg19, minfi, boot,
     survival, utils
+ImportFrom:
 VignetteBuilder: knitr
 Suggests: 
     SummarizedExperiment,
     testthat,
     Biobase,
-    rms,
     survminer,
     affycoretools,
     knitr,
@@ -23,7 +23,7 @@ Suggests:
     prognosticROC
 Description: Creation of the correlated blocks using DNA methylation 
     profiles. A stacked ensemble of machine learning models, 
-    which combined the support vector machine and elastic-net 
+    which combined the cox, support vector machine and elastic-net 
     regression model, can be constructed to predict disease progression.
 License: GPL-2
 BugReports: https://github.com/whirlsyu/EnMCB/issues

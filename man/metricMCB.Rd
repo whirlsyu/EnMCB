@@ -4,7 +4,8 @@
 \alias{metricMCB}
 \title{Calculation of the metric matrix for Methylation Correlation Block}
 \usage{
-metricMCB(MCBset,training_set,Surv,testing_set,Surv.new,Method,silent)
+metricMCB(MCBset,training_set,Surv,testing_set,
+Surv.new,Method,predict_time,ci,silent,alpha,n_mstop,n_nu,theta)
 }
 \arguments{
 \item{MCBset}{Methylation Correlation Block information returned by the IndentifyMCB function.}
@@ -17,9 +18,26 @@ metricMCB(MCBset,training_set,Surv,testing_set,Surv.new,Method,silent)
 
 \item{Surv.new}{Survival function contain the survival information for testing.}
 
-\item{Method}{model used to calculate the compound values for multiple Methylation correlation blocks. Options include "svm" "cox" and "lasso". The default option is SVM method.}
+\item{Method}{model used to calculate the compound values for multiple Methylation correlation blocks. \cr
+Options include "svm" "cox" "coxboost" and "enet". The default option is SVM method.}
 
-\item{silent}{Ture indicates that processing information and progress bar will be shown.}
+\item{predict_time}{time point of the ROC curve used in the AUC calculations, default is 5 years.}
+
+\item{ci}{if True, the confidence intervals for AUC under area under the receiver operating characteristic curve will be calculated. This will be time consuming. default is False.}
+
+\item{silent}{True indicates that processing information and progress bar will be shown.}
+
+\item{alpha}{The elasticnet mixing parameter, with 0 <= alpha <= 1. alpha=1 is the lasso penalty, and alpha=0 the ridge penalty. \cr
+It works only when "enet" Method is selected.}
+
+\item{n_mstop}{an integer giving the number of initial boosting iterations. If mstop = 0, the offset model is returned. \cr
+It works only when "coxboost" Method is selected.}
+
+\item{n_nu}{a double (between 0 and 1) defining the step size or shrinkage parameter in coxboost model. \cr
+It works only when "coxboost" Method is selected.}
+
+\item{theta}{penalty used in the penalized coxph model, which is theta/2 time sum of squared coefficients. default is 1. \cr
+It works only when "cox" Method is selected.}
 }
 \value{
 Object of class \code{list} with elements (XXX will be replaced with the model name you choose):
@@ -32,11 +50,11 @@ Object of class \code{list} with elements (XXX will be replaced with the model n
  }
 }
 \description{
-To enable quantitative analysis of the methylation patterns
-within individual Methylation Correlation Blocks across many samples, a single metric to
-define the methylated pattern of multiple CpG sites within each block.
-Compound scores which calculated all CpGs within individual Methylation Correlation Blocks by SVM model
-were used as the compound methylation values of Methylation Correlation Blocks.
+To enable quantitative analysis of the methylation patterns \cr
+within individual Methylation Correlation Blocks across many samples, a single metric to \cr
+define the methylated pattern of multiple CpG sites within each block.\cr
+Compound scores which calculated all CpGs within individual Methylation Correlation Blocks by linear, SVM or elastic-net model\cr
+Predict values were used as the compound methylation values of Methylation Correlation Blocks.
 }
 \examples{
 #import datasets
