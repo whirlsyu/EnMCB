@@ -12,11 +12,11 @@
 #' @param data_set methylation matrix used for training the model in the analysis.
 #' @param Surv Survival function contain the survival information for training.
 #' @param nfold fold used in the cross validation precedure.
-#' @param Method model used to calculate the compound values for multiple Methylation correlation blocks. Options include "svm", "cox", "coxboost", and "enet". The default option is SVM method.
+#' @param Method model used to calculate the compound values for multiple Methylation correlation blocks. Options include "svm", "cox", "mboost", and "enet". The default option is SVM method.
 #' @param predict_time time point of the ROC curve used in the AUC calculations, default is 5 years.
 #' @param alpha The elasticnet mixing parameter, with 0 <= alpha <= 1. alpha=1 is the lasso penalty, and alpha=0 the ridge penalty. It works only when "enet" Method is selected.
-#' @param n_mstop an integer giving the number of initial boosting iterations. If mstop = 0, the offset model is returned. It works only when "coxboost" Method is selected.
-#' @param n_nu a double (between 0 and 1) defining the step size or shrinkage parameter in coxboost model. It works only when "coxboost" Method is selected.
+#' @param n_mstop an integer giving the number of initial boosting iterations. If mstop = 0, the offset model is returned. It works only when "mboost" Method is selected.
+#' @param n_nu a double (between 0 and 1) defining the step size or shrinkage parameter in mboost model. It works only when "mboost" Method is selected.
 #' @param theta penalty used in the penalized coxph model, which is theta/2 time sum of squared coefficients. default is 1. It works only when "cox" Method is selected.
 #' @param silent Ture indicates that processing information and progress bar will be shown.
 #' @author Xin Yu
@@ -52,7 +52,7 @@ metricMCB.cv<-function(
   data_set,
   Surv,
   nfold=10,
-  Method=c("svm","cox","enet","coxboost")[1],
+  Method=c("svm","cox","enet","mboost")[1],
   predict_time = 5,
   alpha = 0.5,
   n_mstop = 500,
@@ -86,7 +86,7 @@ metricMCB.cv<-function(
   MCB_matrix<-matrix(0,nrow = nrow(MCBset),ncol = ncol(data_set))
   colnames(MCB_matrix)<-colnames(data_set)
   rownames(MCB_matrix)<-as.numeric(MCBset[,'MCB_no'])
-  if (!Method %in% c("svm","cox","enet","coxboost")){
+  if (!Method %in% c("svm","cox","enet","mboost")){
     stop(paste("Method:",Method,"is not supported, see hlep files for the details.",collapse = " "))
   }
   sp<-sample(1:ncol(data_set),replace = F)
@@ -158,7 +158,7 @@ metricMCB.cv<-function(
           correctional_value=correctional_value*1.25
         }
         lambda_min_corrected<-model$lambda.min-0.001*(correctional_value-1)
-      }else if (Method=="coxboost"){
+      }else if (Method=="mboost"){
         model <- tryCatch(mboost::glmboost(y=times,x=data_used_for_training,family=mboost::CoxPH(),
                                                     control=mboost::boost_control(mstop=n_mstop,nu=n_nu)),error = NULL)
       }
@@ -170,7 +170,7 @@ metricMCB.cv<-function(
           #if you use lambda.1se instead, the penalty of enet would be larger, leading that most of covariates were removed form the final model.
           MCB_matrix[mcb,rz]<-stats::predict(model,data_used_for_testing,s=lambda_min_corrected)
         }
-        if (Method=="coxboost")MCB_matrix[mcb,rz] <- stats::predict(model, data_used_for_testing)[,1]
+        if (Method=="mboost")MCB_matrix[mcb,rz] <- stats::predict(model, data_used_for_testing)[,1]
       }else{
         MCB_matrix[mcb,rz]<-NA
       }

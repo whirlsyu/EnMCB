@@ -14,16 +14,16 @@
 #' @param Surv Survival function contain the survival information for training.
 #' @param Surv.new Survival function contain the survival information for testing.
 #' @param Method model used to calculate the compound values for multiple Methylation correlation blocks. \cr
-#' Options include "svm" "cox" "coxboost" and "enet". The default option is SVM method.
+#' Options include "svm" "cox" "mboost" and "enet". The default option is SVM method.
 #' @param predict_time time point of the ROC curve used in the AUC calculations, default is 5 years.
 #' @param ci if True, the confidence intervals for AUC under area under the receiver operating characteristic curve will be calculated. This will be time consuming. default is False.
 #' @param silent True indicates that processing information and progress bar will be shown.
 #' @param alpha The elasticnet mixing parameter, with 0 <= alpha <= 1. alpha=1 is the lasso penalty, and alpha=0 the ridge penalty. \cr
 #' It works only when "enet" Method is selected.
 #' @param n_mstop an integer giving the number of initial boosting iterations. If mstop = 0, the offset model is returned. \cr
-#' It works only when "coxboost" Method is selected.
-#' @param n_nu a double (between 0 and 1) defining the step size or shrinkage parameter in coxboost model. \cr
-#' It works only when "coxboost" Method is selected.
+#' It works only when "mboost" Method is selected.
+#' @param n_nu a double (between 0 and 1) defining the step size or shrinkage parameter in mboost model. \cr
+#' It works only when "mboost" Method is selected.
 #' @param theta penalty used in the penalized coxph model, which is theta/2 time sum of squared coefficients. default is 1. \cr
 #' It works only when "cox" Method is selected.
 #' @author Xin Yu
@@ -64,7 +64,7 @@ metricMCB<-function(
   Surv,
   testing_set=NULL,
   Surv.new=NULL,
-  Method=c("svm","cox","enet","coxboost")[1],
+  Method=c("svm","cox","enet","mboost")[1],
   predict_time = 5,
   ci=FALSE,
   silent=FALSE,
@@ -113,7 +113,7 @@ metricMCB<-function(
       return(write_MCB)
     }
   }
-  if (!Method %in% c("svm","cox","enet","coxboost")){
+  if (!Method %in% c("svm","cox","enet","mboost")){
     stop(paste("Method:",Method,"is not supported, see hlep files for the details.",collapse = " "))
   }else if (Method=="svm") {
     # constuction of MCB Method matrix for SVM
@@ -350,25 +350,25 @@ metricMCB<-function(
     FunctionResults$enet_auc_results<-mcb_enet_res
     FunctionResults$maximum_auc<-best_auc
     FunctionResults$best_enet_model<-best_model
-  }else if (Method=="coxboost") {
-    # constuction of MCB Method matrix for CoxBoost
-    MCB_coxboost_matrix_training<-matrix(0,nrow = nrow(MCBset),ncol = ncol(training_set))
-    colnames(MCB_coxboost_matrix_training)<-colnames(training_set)
-    rownames(MCB_coxboost_matrix_training)<-as.numeric(MCBset[,'MCB_no'])
+  }else if (Method=="mboost") {
+    # constuction of MCB Method matrix for mboost
+    MCB_mboost_matrix_training<-matrix(0,nrow = nrow(MCBset),ncol = ncol(training_set))
+    colnames(MCB_mboost_matrix_training)<-colnames(training_set)
+    rownames(MCB_mboost_matrix_training)<-as.numeric(MCBset[,'MCB_no'])
     #if it has a independent test set create the test_set res set
     if (!is.null(testing_set)) {
-      MCB_coxboost_matrix_test_set<-matrix(0,nrow = nrow(MCBset),ncol = ncol(testing_set))
-      colnames(MCB_coxboost_matrix_test_set)<-colnames(testing_set)
-      rownames(MCB_coxboost_matrix_test_set)<-as.numeric(MCBset[,'MCB_no'])
+      MCB_mboost_matrix_test_set<-matrix(0,nrow = nrow(MCBset),ncol = ncol(testing_set))
+      colnames(MCB_mboost_matrix_test_set)<-colnames(testing_set)
+      rownames(MCB_mboost_matrix_test_set)<-as.numeric(MCBset[,'MCB_no'])
     }else{
-      MCB_coxboost_matrix_test_set<-NULL
+      MCB_mboost_matrix_test_set<-NULL
     }
     FunctionResults<-NULL
     rz=!(is.na(Surv)|Surv[,1]==0)
     times=Surv[rz]
     best_auc<-0
     best_model<-NULL
-    mcb_coxboost_res<-NULL
+    mcb_mboost_res<-NULL
     for (mcb in seq_len(nrow(MCBset))) {
       #if (nrow(MCBset)>1){}
       if (show_bar&!silent) {
@@ -382,47 +382,47 @@ metricMCB<-function(
       # aquire information for CpG sites in MCB
       CpGs<-strsplit(MCBset[mcb,'CpGs']," ")[[1]]
       data_used_for_training<-t(training_set[CpGs,rz])
-      # train a coxboost model
-      coxboost_model <- tryCatch(mboost::glmboost(y=times,x=data_used_for_training,family=mboost::CoxPH(),
+      # train a mboost model
+      mboost_model <- tryCatch(mboost::glmboost(y=times,x=data_used_for_training,family=mboost::CoxPH(),
                                           control=mboost::boost_control(mstop=n_mstop,nu=n_nu)),error = NULL)
       #predictions
-      if (!is.null(coxboost_model)) {
-        MCB_coxboost_matrix_training[mcb,]<-stats::predict(coxboost_model, t(training_set[CpGs,]))[,1]
-        lp_coxboost <-MCB_coxboost_matrix_training[mcb,rz]
-        hr_model<-survival::coxph(times~lp_coxboost)
-        auc_and_ci = calculate_auc_ci(survival = times,marker = MCB_coxboost_matrix_training[mcb,rz],predict_time,ci)
+      if (!is.null(mboost_model)) {
+        MCB_mboost_matrix_training[mcb,]<-stats::predict(mboost_model, t(training_set[CpGs,]))[,1]
+        lp_mboost <-MCB_mboost_matrix_training[mcb,rz]
+        hr_model<-survival::coxph(times~lp_mboost)
+        auc_and_ci = calculate_auc_ci(survival = times,marker = MCB_mboost_matrix_training[mcb,rz],predict_time,ci)
         write_MCB['AUC_train']<-auc_and_ci$AUC
         if (ci) write_MCB['95_CI_train']<-auc_and_ci$CI95
         #if it has a independent test set
         if (!is.null(testing_set)){
-          MCB_coxboost_matrix_test_set[mcb,]<-stats::predict(coxboost_model, t(testing_set[CpGs,]))[,1]
-          auc_and_ci = calculate_auc_ci(Surv.new,marker = MCB_coxboost_matrix_test_set[mcb,],predict_time,ci)
+          MCB_mboost_matrix_test_set[mcb,]<-stats::predict(mboost_model, t(testing_set[CpGs,]))[,1]
+          auc_and_ci = calculate_auc_ci(Surv.new,marker = MCB_mboost_matrix_test_set[mcb,],predict_time,ci)
           write_MCB['AUC_test']<-auc_and_ci$AUC
           if (ci) write_MCB['95_CI_test']<-auc_and_ci$CI95
           if ((write_MCB['AUC_train']+write_MCB['AUC_test'])>best_auc){
             best_auc<-write_MCB['AUC_train']+write_MCB['AUC_test']
-            best_model<-list(mcb,coxboost_model,hr_model)
+            best_model<-list(mcb,mboost_model,hr_model)
           }
           #if it does not have a independent test set
         }else{
           write_MCB<-write_MCB[1:3]
           if (write_MCB['AUC_train']>best_auc){
             best_auc<-write_MCB['AUC_train']
-            best_model<-list(mcb,coxboost_model,hr_model)
+            best_model<-list(mcb,mboost_model,hr_model)
           }
         }
       }else{
-        stop("This CoxBoost model can not be built.")
+        stop("This mboost model can not be built.")
       }
-      mcb_coxboost_res<-rbind(mcb_coxboost_res,write_MCB)
+      mcb_mboost_res<-rbind(mcb_mboost_res,write_MCB)
     }
-    colnames(mcb_coxboost_res)<-c("MCB_no","training_set_auc","test_set_auc")
-    names(best_model)<-c("MCB_no","coxboost_model","hr_model")
-    FunctionResults$MCB_coxboost_matrix_training<-MCB_coxboost_matrix_training
-    FunctionResults$MCB_coxboost_matrix_test_set<-MCB_coxboost_matrix_test_set
-    FunctionResults$coxboost_auc_results<-mcb_coxboost_res
+    colnames(mcb_mboost_res)<-c("MCB_no","training_set_auc","test_set_auc")
+    names(best_model)<-c("MCB_no","mboost_model","hr_model")
+    FunctionResults$MCB_mboost_matrix_training<-MCB_mboost_matrix_training
+    FunctionResults$MCB_mboost_matrix_test_set<-MCB_mboost_matrix_test_set
+    FunctionResults$mboost_auc_results<-mcb_mboost_res
     FunctionResults$maximum_auc<-best_auc
-    FunctionResults$best_coxboost_model<-best_model
+    FunctionResults$best_mboost_model<-best_model
   }
   return(FunctionResults)
 }

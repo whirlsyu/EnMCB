@@ -15,6 +15,7 @@
 #'    \code{cox} \tab Model object for the cox model at first level. \cr
 #'    \code{svm} \tab Model object for the svm model at first level. \cr
 #'    \code{enet} \tab Model object for the enet model at first level. \cr
+#'    \code{mboost} \tab Model object for the mboost model at first level. \cr
 #'    \code{stacking} \tab Model object for the stacking model. \cr
 #'  }
 #' @references
@@ -69,31 +70,31 @@ ensemble_model <- function(single_res, training_set, Surv_training, testing_set=
                            Surv.new = Surv_testing,
                            Method = "enet",
                            silent = TRUE),error = function(e){NULL})
-  coxboost<- tryCatch(EnMCB::metricMCB(MCBset = single_res,
+  mboost<- tryCatch(EnMCB::metricMCB(MCBset = single_res,
                                    training_set = related_training,
                                    Surv = Surv_training,
                                    testing_set = related_testing,
                                    Surv.new = Surv_testing,
-                                   Method = "coxboost",
+                                   Method = "mboost",
                                    silent = TRUE),error = function(e){NULL})
   data<-rbind(cox$MCB_cox_matrix_training,
               svm$MCB_svm_matrix_training,
               enet$MCB_enet_matrix_training,
-              coxboost$MCB_coxboost_matrix_training
+              mboost$MCB_mboost_matrix_training
   )
-  rownames(data)<-c('cox','svm','enet','coxboost')
+  rownames(data)<-c('cox','svm','enet','mboost')
   data<-t(data)
   data_f<-as.data.frame(data)
-  univ_models<-tryCatch(rms::cph(formula = Surv_training ~ cox + svm + enet + coxboost ,data=data_f),error=function(e){NULL} )
+  univ_models<-tryCatch(rms::cph(formula = Surv_training ~ cox + svm + enet + mboost ,data=data_f),error=function(e){NULL} )
   if (is.null(univ_models)) {
     stop(errorCondition("Ensemble model can't be created, please check your data..."))
   }else{
     res<-list(cox$best_cox_model,
               svm$best_svm_model,
               enet$best_enet_model,
-              coxboost$best_coxboost_model,
+              mboost$best_mboost_model,
               univ_models)
-    names(res)<-c("cox","svm","enet","coxboost","stacking")
+    names(res)<-c("cox","svm","enet","mboost","stacking")
     return(res)
   }
 }

@@ -39,13 +39,13 @@ ensemble_prediction <- function(ensemble_model,prediction_data, mutiple_results 
   svm<-stats::predict(ensemble_model$svm$svm_model, data.frame(t(prediction_data)))$predicted
   cox<-stats::predict(ensemble_model$cox$cox_model, data.frame(t(prediction_data)))
   enet<-stats::predict(ensemble_model$enet$enet_model,t(prediction_data),s=ensemble_model$enet$`corrected_lambda(min)`)
-  coxboost<-stats::predict(ensemble_model$coxboost$coxboost_model, t(prediction_data))[,1]
+  mboost<-stats::predict(ensemble_model$mboost$mboost_model, t(prediction_data))[,1]
   data<-rbind(cox,
               svm,
               t(enet),
-              coxboost
+              mboost
   )
-  rownames(data)<-c('cox','svm','enet','coxboost')
+  rownames(data)<-c('cox','svm','enet','mboost')
   data<-t(data)
   data_f<-as.data.frame(data)
   stats::predict(ensemble_model$stacking, data_f)

@@ -530,15 +530,15 @@ ensemble_prediction.m<- function(ensemble_model,prediction_data) {
   cox <-stats::predict(ensemble_model$cox$cox_model, data.frame(t(prediction_data)))
   enet <- stats::predict(ensemble_model$enet$enet_model, t(prediction_data), 
                          s = ensemble_model$enet$`corrected_lambda(min)`)
-  coxboost<-stats::predict(ensemble_model$coxboost$coxboost_model, t(prediction_data))[,1]
+  mboost<-stats::predict(ensemble_model$mboost$mboost_model, t(prediction_data))[,1]
   data<-rbind(cox,
               svm,
               t(enet),
-              coxboost
+              mboost
   )
-  rownames(data)<-c('cox','svm','enet','coxboost')
+  rownames(data)<-c('cox','svm','enet','mboost')
   data<-t(data)
-  data_f<-data.frame(cox = cox,svm=rank_svm,enet=as.numeric(enet),coxboost = coxboost)
+  data_f<-data.frame(cox = cox,svm=rank_svm,enet=as.numeric(enet),mboost = mboost)
   ensemble = stats::predict(ensemble_model$stacking, data_f,type='lp')
   return(t(cbind(data,ensemble)))
 }
