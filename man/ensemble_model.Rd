@@ -23,6 +23,7 @@ Object of class \code{list} with elements (XXX repesents the model you choose):
    \code{cox} \tab Model object for the cox model at first level. \cr
    \code{svm} \tab Model object for the svm model at first level. \cr
    \code{enet} \tab Model object for the enet model at first level. \cr
+   \code{mboost} \tab Model object for the mboost model at first level. \cr
    \code{stacking} \tab Model object for the stacking model. \cr
  }
 }
