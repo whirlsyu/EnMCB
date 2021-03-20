@@ -62,85 +62,7 @@ predict.mcb.coxph.penal <- function(object,newdata,...){
     stop('newdata do not contain sufficient CpGs in the model')
   }
 }
-#inherent from minifi package to reduce the dependencies
-# getAnnotation <- function(object, what = "everything", lociNames = NULL,
-#                           orderByLocation = FALSE, dropNonMapping = FALSE) {
-#   .annoGet <- function(what, envir) {
-#     pointer <- get(what, envir = envir)
-#     if (is(pointer, "DataFrame")) return(pointer)
-#     get(pointer$what, envir = as.environment(pointer$envir))
-#   }
-#   getAnnotationObject <- function(object) {
-#     if (is.character(object)) {
-#       if (!require(object, character.only = TRUE)) {
-#         stop(sprintf("cannot load annotation package %s", object))
-#       }
-#       object <- get(object)
-#     }
-#     if (!is(object, "IlluminaMethylationAnnotation")) {
-#       stop("Could not locate annotation object for 'object' of class",
-#            class(object))
-#     }
-#     object
-#   }
-#   .availableAnnotation <- function(object) {
-#     object <- getAnnotationObject(object)
-#     allAnnoNames <- ls(object@data)
-#     annoClasses <- sub("\\..*", "", allAnnoNames)
-#     annoClassesChoices <- sub(".*\\.", "", allAnnoNames)
-#     annoClassesChoices[grep("\\.", allAnnoNames, invert = TRUE)] <- ""
-#     annoClassesChoices <- split(annoClassesChoices, annoClasses)
-#     annoClasses <- unique(annoClasses)
-#     defaults <- object@defaults
-#     out <- list(
-#       names = allAnnoNames,
-#       classes = annoClasses,
-#       classChoices = annoClassesChoices,
-#       defaults = defaults)
-#     out
-#   }
-#   # Processing of arguments and check
-#   annoObject <- getAnnotationObject(object)
-#   available <- .availableAnnotation(annoObject)
-#   if ("everything" %in% what)  what <- available$defaults
-#   if (!(all(what %in% available$names))) {
-#     stop("the value of argument 'what' is not part of the annotation ",
-#          "package or 'everything'")
-#   }
-#   n_choices <- vapply(
-#     available$classes,
-#     function(cl) length(grep(cl, what)),
-#     integer(1))
-#   if (any(n_choices > 1)) stop("only one choice per allowable class")
-#   if (!any(grepl("^Locations", what)) &&
-#       (orderByLocation || dropNonMapping)) {
-#     stop("To use 'orderbyLocation' or 'dropNonMapping' specify Locations ",
-#          "as part of 'what'")
-#   }
-#   # TODO: Ensure same order always
-#   # Old code for inspiration
-#   # bestOrder <- c("Locations", "Manifest", "IlluminaSNPs", "Annotation")
-#   # what <- bestOrder[bestOrder %in% what]
-#   
-#   out <- do.call(cbind, lapply(what, function(wh) {
-#     .annoGet(wh, envir = annoObject@data)
-#   }))
-#   
-#   if (!is.null(lociNames)) {
-#     lociNames <- lociNames[lociNames %in% rownames(out)]
-#   }
-#   if (is(object, "MethylSet") || is(object, "RatioSet") ||
-#       is(object, "GenomicMethylSet") || is(object, "GenomicRatioSet")) {
-#     rNames <- rownames(object)
-#     if (is.null(lociNames)) {
-#       lociNames <- rNames[rNames %in% rownames(out)]
-#     } else {
-#       lociNames <- rNames[rNames %in% lociNames]
-#     }
-#   }
-#   if (!is.null(lociNames)) out <- out[match(lociNames, rownames(out)),]
-#   out
-# }
+
 
 test_logrank_p_in_KM<-function(mcb_matrix,y_surv){
   p.val_all<-NULL
@@ -230,7 +152,7 @@ multiple_time_ROC <- function(Test,y_surv,genesel) {
     ROC_res= survivalROC::survivalROC(Stime=y_surv[,1],
                          status=y_surv[,2],
                          marker =as.numeric(Test),
-                         lambda = NULL,
+                         lambda = NULL,window = "asymmetric",
                          predict.time = n_time,method = "NNE",span =0.25*length(y_surv[,1])^(-0.20))#
     # AUC at 7 years: 0·670 (0·578–0·762)
     sroclong_all<-ROCdata_save(sroclong_all,ROC_res,mark = paste("AUC at",n_time,"years:",round(ROC_res$AUC,2),collapse = " "))
@@ -315,7 +237,7 @@ ROC_mutiple_clinical<-function(test_frame,y_surv,genesel="title",ntime=5){
       ROC_res= survivalROC::survivalROC(Stime=y_surv[,1],
                                         status=y_surv[,2],
                                         marker =as.numeric(test_frame[,n]),
-                                        lambda = NULL,
+                                        lambda = NULL,window = "asymmetric",
                                         predict.time = ntime,method = "NNE",span =0.25*length(y_surv[,1])^(-0.20))#
       sroclong_all<-ROCdata_save(sroclong_all,ROC_res,mark = paste(ntime,"year AUC at",colnames(test_frame)[n],round(ROC_res$AUC,2),collapse = " "))
     }
@@ -355,7 +277,7 @@ mutiple_time_ROC <- function(Test,y_surv,genesel) {
     ROC_res= survivalROC::survivalROC(Stime=y_surv[,1],
                          status=y_surv[,2],
                          marker =as.numeric(Test),
-                         lambda = NULL,
+                         lambda = NULL,window = "asymmetric",
                          predict.time = n_time,method = "NNE",span =0.25*length(y_surv[,1])^(-0.20))#
     # AUC at 7 years: 0·670 (0·578–0·762)
 
@@ -507,9 +429,10 @@ metricMCB.mean<-function(MCBset,MCB_matrix,Surv,data_set,show_bar=T){
                                         method = "NNE",
                                         span =0.25*length(Surv)^(-0.20))$AUC
     write_MCB[3]<-AUC_value
-    cindex<-survival::survConcordance(Surv ~ MCB_matrix[mcb,])
+    reg<-survival::survreg(Surv ~ MCB_matrix[mcb,])
+    cindex<-survival::concordance(reg)
     write_MCB[4]<-cindex$concordance
-    write_MCB[5]<-cindex$std.err
+    write_MCB[5]<-cindex$cvar
     MCB_model_res<-rbind(MCB_model_res,write_MCB)
   }
   colnames(MCB_model_res)<-c("MCB_no","CpGs","auc","C-index","C-index_SE")
@@ -541,5 +464,152 @@ ensemble_prediction.m<- function(ensemble_model,prediction_data) {
   data_f<-data.frame(cox = cox,svm=rank_svm,enet=as.numeric(enet),mboost = mboost)
   ensemble = stats::predict(ensemble_model$stacking, data_f,type='lp')
   return(t(cbind(data,ensemble)))
+}
+
+#inherent from survivalROC package to calculate ROC with small modification
+survivalROC_C <- function (Stime, status, marker, entry = NULL, predict.time, 
+                         cut.values = NULL, method = "NNE", lambda = NULL, span = NULL, 
+                         window = "symmetric") 
+{
+  times = Stime
+  x <- marker
+  if (is.null(entry)) 
+    entry <- rep(0, length(times))
+  bad <- is.na(times) | is.na(status) | is.na(x) | is.na(entry)
+  entry <- entry[!bad]
+  times <- times[!bad]
+  status <- status[!bad]
+  x <- x[!bad]
+  if (sum(bad) > 0) 
+    cat(paste("\n", sum(bad), "records with missing values dropped. \n"))
+  if (is.null(cut.values)) 
+    cut.values <- unique(x)
+  cut.values <- cut.values[order(cut.values)]
+  ncuts <- length(cut.values)
+  ooo <- order(times)
+  times <- times[ooo]
+  status <- status[ooo]
+  x <- x[ooo]
+  s0 <- 1
+  unique.t0 <- unique(times)
+  unique.t0 <- unique.t0[order(unique.t0)]
+  n.times <- sum(unique.t0 <= predict.time)
+  for (j in 1:n.times) {
+    n <- sum(entry <= unique.t0[j] & times >= unique.t0[j])
+    d <- sum((entry <= unique.t0[j]) & (times == unique.t0[j]) & 
+               (status == 1))
+    if (n > 0) 
+      s0 <- s0 * (1 - d/n)
+  }
+  s.pooled <- s0
+  roc.matrix <- matrix(NA, ncuts, 2)
+  roc.matrix[ncuts, 1] <- 0
+  roc.matrix[ncuts, 2] <- 1
+  if (method == "KM") {
+    for (c in 1:(ncuts - 1)) {
+      s0 <- 1
+      subset <- as.logical(x > cut.values[c])
+      e0 <- entry[subset]
+      t0 <- times[subset]
+      c0 <- status[subset]
+      if (!is.null(t0)) {
+        unique.t0 <- unique(t0)
+        unique.t0 <- unique.t0[order(unique.t0)]
+        n.times <- sum(unique.t0 <= predict.time)
+        if (n.times > 0) {
+          for (j in 1:n.times) {
+            n <- sum(e0 <= unique.t0[j] & t0 >= unique.t0[j])
+            d <- sum((e0 <= unique.t0[j]) & (t0 == unique.t0[j]) & 
+                       (c0 == 1))
+            if (n > 0) 
+              s0 <- s0 * (1 - d/n)
+          }
+        }
+      }
+      p0 <- mean(subset)
+      roc.matrix[c, 1] <- (1 - s0) * p0/(1 - s.pooled)
+      roc.matrix[c, 2] <- 1 - s0 * p0/s.pooled
+    }
+  }
+  if (method == "NNE") {
+    if (is.null(lambda) & is.null(span)) {
+      cat("method = NNE requires either lambda or span! \n")
+      stop(0)
+    }
+    x.unique <- unique(x)
+    x.unique <- x.unique[order(x.unique)]
+    S.t.x <- rep(0, length(x.unique))
+    t.evaluate <- unique(times[status == 1])
+    t.evaluate <- t.evaluate[order(t.evaluate)]
+    t.evaluate <- t.evaluate[t.evaluate <= predict.time]
+    for (j in 1:length(x.unique)) {
+      if (!is.null(span)) {
+        if (window == "symmetric") {
+          ddd <- (x - x.unique[j])
+          n <- length(x)
+          ddd <- ddd[order(ddd)]
+          index0 <- sum(ddd < 0) + 1
+          index1 <- index0 + trunc(n * span + 0.5)
+          if (index1 > n) 
+            index1 <- n
+          lambda <- ddd[index1]
+          wt <- as.integer(((x - x.unique[j]) <= lambda) & 
+                             ((x - x.unique[j]) >= 0))
+          index0 <- sum(ddd <= 0)
+          index2 <- index0 - trunc(n * span/2)
+          if (index2 < 1) 
+            index2 <- 1
+          lambda <- abs(ddd[index2])
+          set.index <- ((x - x.unique[j]) >= -lambda) & 
+            ((x - x.unique[j]) <= 0)
+          wt[set.index] <- 1
+        }
+        if (window == "asymmetric") {
+          ddd <- (x - x.unique[j])
+          n <- length(x)
+          ddd <- ddd[order(ddd)]
+          index0 <- sum(ddd < 0) + 1
+          index <- index0 + trunc(n * span)
+          if (index > n) 
+            index <- n
+          lambda <- ddd[index]
+          wt <- as.integer(((x - x.unique[j]) <= lambda) & 
+                             ((x - x.unique[j]) >= 0))
+        }
+      }
+      else {
+        wt <- exp(-(x - x.unique[j])^2/lambda^2)
+      }
+      s0 <- 1
+      for (k in 1:length(t.evaluate)) {
+        n <- sum(wt * (entry <= t.evaluate[k]) & (times >= 
+                                                    t.evaluate[k]))
+        d <- sum(wt * (entry <= t.evaluate[k]) & (times == 
+                                                    t.evaluate[k]) * (status == 1))
+        if (n > 0) 
+          s0 <- s0 * (1 - d/n)
+      }
+      S.t.x[j] <- s0
+    }
+    S.all.x <- S.t.x[match(x, x.unique)]
+    n <- length(times)
+    S.marginal <- sum(S.all.x)/n
+    for (c in 1:(ncuts - 1)) {
+      p1 <- sum(x > cut.values[c])/n
+      Sx <- sum(S.all.x[x > cut.values[c]])/n
+      roc.matrix[c, 1] <- (p1 - Sx)/(1 - S.marginal)
+      roc.matrix[c, 2] <- 1 - Sx/S.marginal
+    }
+  }
+  sensitivity = roc.matrix[, 1]
+  specificity = roc.matrix[, 2]
+  x <- 1 - c(0, specificity)
+  y <- c(1, sensitivity)
+  n <- length(x)
+  dx <- x[-n] - x[-1]
+  mid.y <- (y[-n] + y[-1])/2
+  area <- sum(dx * mid.y)
+  list(cut.values = c(-Inf, cut.values), TP = y, FP = x, predict.time = predict.time, 
+       Survival = s.pooled, AUC = area)
 }
 # end load
