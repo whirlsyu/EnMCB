@@ -7,10 +7,11 @@
 #' @param Surv_training Survival function contain the survival information for training.
 #' @param testing_set methylation matrix used for testing the model in the analysis.
 #' @param Surv_testing Survival function contain the survival information for testing.
-#' @param ensemble_type Secondary model use for ensemble, one of COX and AUC.
+#' @param ensemble_type Secondary model use for ensemble, one of Cox and C-index.
 #' @author Xin Yu
 #' @keywords methylation ensemble stacking
-#' @usage ensemble_model(single_res,training_set,Surv_training,testing_set,Surv_testing,ensemble_type)
+#' @usage ensemble_model(single_res,training_set,Surv_training,testing_set,
+#' Surv_testing,ensemble_type)
 #' @return Object of class \code{list} with elements (XXX repesents the model you choose):
 #'  \tabular{ll}{
 #'    \code{cox} \tab Model object for the cox model at first level. \cr
@@ -41,7 +42,7 @@ ensemble_model <- function(single_res,
                            Surv_training, 
                            testing_set=NULL, 
                            Surv_testing=NULL,
-                           ensemble_type = "COX") {
+                           ensemble_type = "Cox") {
   if (dim(single_res)[1]>dim(single_res)[2]) {
     single_res<-t(as.matrix(single_res))
   }
@@ -91,10 +92,17 @@ ensemble_model <- function(single_res,
   rownames(data)<-c('cox','svm','enet','mboost')
   data<-t(data)
   data_f<-as.data.frame(data)
-  if (ensemble_type == "COX"){
+  if (ensemble_type == "Cox"){
     univ_models<-tryCatch(rms::cph(formula = Surv_training ~ cox + svm + enet + mboost ,data=data_f),error=function(e){NULL} )
+  }else if (ensemble_type == "C-index"){
+    #This will let the prediction function use the lambda.1st as the default lambda, which maximum the C-index.
+    #It returns the linear model predictions.
+    univ_models<-tryCatch(glmnet::cv.glmnet(x=as.matrix(data_f[!is.na(Surv_training),]),
+                                            Surv_training[!is.na(Surv_training)],
+                                            family='cox',type.measure = 'C'),
+                          error=function(e){NULL} )
   }else{
-    warning("unsupported ensemble type! must be one of COX and AUC")
+    warning("unsupported ensemble type! must be one of Cox and C-index")
     stop(0)
   }
   if (is.null(univ_models)) {

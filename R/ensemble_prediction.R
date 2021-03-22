@@ -48,5 +48,11 @@ ensemble_prediction <- function(ensemble_model,prediction_data, mutiple_results 
   rownames(data)<-c('cox','svm','enet','mboost')
   data<-t(data)
   data_f<-as.data.frame(data)
-  stats::predict(ensemble_model$stacking, data_f)
+  if (class(em$stacking)[1] == "cv.glmnet")
+    return(stats::predict(ensemble_model$stacking, as.matrix(data_f)))
+  else if (class(em$stacking)[1] == "cph")
+    return(stats::predict(ensemble_model$stacking, as.matrix(data_f)))
+  else
+    stop("ERROR: The ensemble predition model is invaild !")
+    
 }
