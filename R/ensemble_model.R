@@ -7,9 +7,10 @@
 #' @param Surv_training Survival function contain the survival information for training.
 #' @param testing_set methylation matrix used for testing the model in the analysis.
 #' @param Surv_testing Survival function contain the survival information for testing.
+#' @param ensemble_type Secondary model use for ensemble, one of COX and AUC.
 #' @author Xin Yu
 #' @keywords methylation ensemble stacking
-#' @usage ensemble_model(single_res,training_set,Surv_training,testing_set,Surv_testing)
+#' @usage ensemble_model(single_res,training_set,Surv_training,testing_set,Surv_testing,ensemble_type)
 #' @return Object of class \code{list} with elements (XXX repesents the model you choose):
 #'  \tabular{ll}{
 #'    \code{cox} \tab Model object for the cox model at first level. \cr
@@ -35,7 +36,12 @@
 #'     Surv_training=demo_survival_data[trainingset])
 #'
 #'
-ensemble_model <- function(single_res, training_set, Surv_training, testing_set=NULL, Surv_testing=NULL) {
+ensemble_model <- function(single_res, 
+                           training_set, 
+                           Surv_training, 
+                           testing_set=NULL, 
+                           Surv_testing=NULL,
+                           ensemble_type = "COX") {
   if (dim(single_res)[1]>dim(single_res)[2]) {
     single_res<-t(as.matrix(single_res))
   }
@@ -85,7 +91,12 @@ ensemble_model <- function(single_res, training_set, Surv_training, testing_set=
   rownames(data)<-c('cox','svm','enet','mboost')
   data<-t(data)
   data_f<-as.data.frame(data)
-  univ_models<-tryCatch(rms::cph(formula = Surv_training ~ cox + svm + enet + mboost ,data=data_f),error=function(e){NULL} )
+  if (ensemble_type == "COX"){
+    univ_models<-tryCatch(rms::cph(formula = Surv_training ~ cox + svm + enet + mboost ,data=data_f),error=function(e){NULL} )
+  }else{
+    warning("unsupported ensemble type! must be one of COX and AUC")
+    stop(0)
+  }
   if (is.null(univ_models)) {
     stop(errorCondition("Ensemble model can't be created, please check your data..."))
   }else{

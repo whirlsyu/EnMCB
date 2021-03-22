@@ -4,7 +4,7 @@
 \alias{ensemble_model}
 \title{Trainging stacking ensemble model for Methylation Correlation Block}
 \usage{
-ensemble_model(single_res,training_set,Surv_training,testing_set,Surv_testing)
+ensemble_model(single_res,training_set,Surv_training,testing_set,Surv_testing,ensemble_type)
 }
 \arguments{
 \item{single_res}{Methylation Correlation Block information returned by the IndentifyMCB function.}
@@ -16,6 +16,8 @@ ensemble_model(single_res,training_set,Surv_training,testing_set,Surv_testing)
 \item{testing_set}{methylation matrix used for testing the model in the analysis.}
 
 \item{Surv_testing}{Survival function contain the survival information for testing.}
+
+\item{ensemble_type}{Secondary model use for ensemble, one of COX and AUC.}
 }
 \value{
 Object of class \code{list} with elements (XXX repesents the model you choose):
