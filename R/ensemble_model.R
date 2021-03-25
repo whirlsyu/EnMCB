@@ -49,8 +49,10 @@ ensemble_model <- function(single_res,
   if (nrow(single_res)!=1){
     stop(errorCondition("ERROR: Results information (single_res) should only contain one single Methylation Correlation Block."))
   }
+  rz=!(is.na(Surv_training)|Surv_training[,1]==0)
+  Surv_training<-Surv_training[rz]
   all_related_CpGs<-strsplit(paste(single_res[,"CpGs"],collapse = " ")," ")[[1]]
-  related_training<-training_set[rownames(training_set) %in% all_related_CpGs,]
+  related_training<-training_set[rownames(training_set) %in% all_related_CpGs,rz]
   if (!is.null(testing_set)) {
     related_testing<-testing_set[rownames(testing_set) %in% all_related_CpGs,]
   }else{
