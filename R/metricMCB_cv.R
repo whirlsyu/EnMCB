@@ -13,7 +13,7 @@
 #' @param Surv Survival function contain the survival information for training.
 #' @param nfold fold used in the cross validation precedure.
 #' @param Method model used to calculate the compound values for multiple Methylation correlation blocks. Options include "svm", "cox", "mboost", and "enet". The default option is SVM method.
-#' @param predict_time time point of the ROC curve used in the AUC calculations, default is 5 years.
+#' @param predict_time time point of the ROC curve used in the AUC calculations, default is 3 years.
 #' @param alpha The elasticnet mixing parameter, with 0 <= alpha <= 1. alpha=1 is the lasso penalty, and alpha=0 the ridge penalty. It works only when "enet" Method is selected.
 #' @param n_mstop an integer giving the number of initial boosting iterations. If mstop = 0, the offset model is returned. It works only when "mboost" Method is selected.
 #' @param n_nu a double (between 0 and 1) defining the step size or shrinkage parameter in mboost model. It works only when "mboost" Method is selected.
@@ -53,7 +53,7 @@ metricMCB.cv<-function(
   Surv,
   nfold=10,
   Method=c("svm","cox","enet","mboost")[1],
-  predict_time = 5,
+  predict_time = 3,
   alpha = 0.5,
   n_mstop = 500,
   n_nu = 0.1,

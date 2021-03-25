@@ -18,7 +18,7 @@ Method,predict_time,alpha,n_mstop,n_nu,theta,silent)
 
 \item{Method}{model used to calculate the compound values for multiple Methylation correlation blocks. Options include "svm", "cox", "mboost", and "enet". The default option is SVM method.}
 
-\item{predict_time}{time point of the ROC curve used in the AUC calculations, default is 5 years.}
+\item{predict_time}{time point of the ROC curve used in the AUC calculations, default is 3 years.}
 
 \item{alpha}{The elasticnet mixing parameter, with 0 <= alpha <= 1. alpha=1 is the lasso penalty, and alpha=0 the ridge penalty. It works only when "enet" Method is selected.}
 
