@@ -462,7 +462,11 @@ ensemble_prediction.m<- function(ensemble_model,prediction_data) {
   rownames(data)<-c('cox','svm','enet','mboost')
   data<-t(data)
   data_f<-data.frame(cox = cox,svm=rank_svm,enet=as.numeric(enet),mboost = mboost)
-  ensemble = stats::predict(ensemble_model$stacking, data_f,type='lp')
+  if (class(ensemble_model$stacking)[1] == "cv.glmnet")
+    ensemble = as.numeric(stats::predict(ensemble_model$stacking, as.matrix(data_f)))
+  else if (class(ensemble_model$stacking)[1] == "cph")
+    ensemble = stats::predict(ensemble_model$stacking, data_f,type='lp')
+  else stop("ERROR: The ensemble predition model is invaild !")
   return(t(cbind(data,ensemble)))
 }
 
