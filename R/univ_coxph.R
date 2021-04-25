@@ -1,4 +1,4 @@
-#' @title Batch test for variables using coxph
+#' @title univariate and multivariate survival analysis using coxph
 #' @author Xin Yu
 #'
 #' @param dataframe Clinic data and covariates ready to be tested. Rows are variables and columns are samples.
