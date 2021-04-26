@@ -26,5 +26,5 @@ multi_coxph <- function(dataframe,y_surv,digits=4,asnumeric=TRUE) {
   formula_str<- paste('y_surv',covariates,sep = ' ~ ')
   #cat(formula_str)
   multi_models<-survival::coxph(as.formula(formula_str),data = dataframe)
-  multi_models
+  multi_models %>% finalfit::fit2df()
 }
