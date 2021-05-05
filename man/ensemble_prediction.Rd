@@ -4,14 +4,14 @@
 \alias{ensemble_prediction}
 \title{fitting function using stacking ensemble model for Methylation Correlation Block}
 \usage{
-ensemble_prediction(ensemble_model, prediction_data, mutiple_results = FALSE)
+ensemble_prediction(ensemble_model, prediction_data, multiple_results = FALSE)
 }
 \arguments{
 \item{ensemble_model}{ensemble model which built by ensemble_model() function}
 
 \item{prediction_data}{A vector, matrix, list, or data frame containing the predictions (input).}
 
-\item{mutiple_results}{Boolean vector, True for including the single model results.}
+\item{multiple_results}{Boolean vector, True for including the single model results.}
 }
 \value{
 Object of numeric class \code{double}

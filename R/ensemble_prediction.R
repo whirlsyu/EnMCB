@@ -4,7 +4,7 @@
 #' The function invokes particular methods which is the ensemble model described in the reference.
 #' @param ensemble_model ensemble model which built by ensemble_model() function
 #' @param prediction_data A vector, matrix, list, or data frame containing the predictions (input).
-#' @param mutiple_results Boolean vector, True for including the single model results.
+#' @param multiple_results Boolean vector, True for including the single model results.
 #' @references
 #' Xin Yu et al. 2019 Predicting disease progression in lung adenocarcinoma patients based on methylation correlated blocks using ensemble machine learning classifiers (under review)
 #' @export
@@ -28,8 +28,8 @@
 #' em_prediction_results<-ensemble_prediction(ensemble_model = em,
 #' prediction_data = datamatrix[,testingset])
 #'
-ensemble_prediction <- function(ensemble_model,prediction_data, mutiple_results = FALSE) {
-  if (mutiple_results) {
+ensemble_prediction <- function(ensemble_model,prediction_data, multiple_results = FALSE) {
+  if (multiple_results) {
     return(ensemble_prediction.m(ensemble_model,prediction_data))
   }
   prediction_data<-prediction_data[ensemble_model$cox$cox_model$CpGs,]
