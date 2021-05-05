@@ -1,13 +1,17 @@
-CHANGES IN VERSION 0.99.12
+CHANGES IN VERSION 1.2.3
 -------------------------
 
 NEW FEATURES
 
     o Update vignettes.
+    o This is a major release update for EnMCB package.
+    o We add new options for selecting the correlation methods.
+    o We add mboost algorithm in our ensemble prediction model.
 
 SIGNIFICANT USER-VISIBLE CHANGES
 
     o Delete unused data.
+    o Correct the parameters' names.
 
 BUG FIXES
 
