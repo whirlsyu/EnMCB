@@ -97,7 +97,9 @@ IdentifyMCB<-function(
   cat("Now gathering the results, please wait ...\n")
   met_cg_allgene<-met_cg_allgene[rownames(correlation_res),]
   MCB_flag<-rep("boundary",nrow(correlation_res))
-  MCB_flag[as.numeric(correlation_res[,'estimate.cor'])>CorrelationThreshold]<-"MCB"
+  if (method == "pearson") MCB_flag[as.numeric(correlation_res[,'estimate.cor'])>CorrelationThreshold]<-"MCB"
+  else if (method == "spearman") MCB_flag[as.numeric(correlation_res[,'estimate.rho'])>CorrelationThreshold]<-"MCB"
+  else if (method == "kendall") MCB_flag[as.numeric(correlation_res[,'estimate.tau'])>CorrelationThreshold]<-"MCB"
   # This CpGs and next one are included.
   MCBsites<-union(grep("MCB",MCB_flag),grep("MCB",MCB_flag)+1)
   MCBsites<-MCBsites[order(MCBsites)]
