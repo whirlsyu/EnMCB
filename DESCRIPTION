@@ -20,7 +20,8 @@ Suggests:
     affycoretools,
     knitr,
     plotROC,
-    prognosticROC
+    prognosticROC,
+    rmarkdown
 Description: Creation of the correlated blocks using DNA methylation 
     profiles. A stacked ensemble of machine learning models, 
     which combined the cox, support vector machine and elastic-net 
