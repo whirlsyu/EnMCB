@@ -84,10 +84,14 @@ IdentifyMCB<-function(
            ann_matrix[i+1,'chr']==ann_matrix[i,'chr']){
           res<-rbind(res,c(unlist(stats::cor.test(met_matrix[i,],met_matrix[i+1,],method = method))[1:5]))
         }else{
-          res<-rbind(res,matrix(c(0,0,1,0,0),1,5))
+          if (method == "pearson") res<-rbind(res,matrix(c(0,0,1,0,0),1,5))
+          else if (method == "spearman") res<-rbind(res,matrix(c(0,1,0,0,0),1,5))
+          else if (method == "kendall") res<-rbind(res,matrix(c(0,1,0,0,0),1,5))
         }
       }else{
-        res<-rbind(res,matrix(c(0,0,1,0,0),1,5))
+        if (method == "pearson") res<-rbind(res,matrix(c(0,0,1,0,0),1,5))
+        else if (method == "spearman") res<-rbind(res,matrix(c(0,1,0,0,0),1,5))
+        else if (method == "kendall") res<-rbind(res,matrix(c(0,1,0,0,0),1,5))
       }
     }
     rownames(res)<-rownames(met_matrix)
