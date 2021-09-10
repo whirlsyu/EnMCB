@@ -1,0 +1,16 @@
+citHeader("To cite EnMCB in publications use:")
+
+citEntry(
+  entry    = "Article",
+  title    = "EnMCB: an R/bioconductor package for predicting disease progression based on methylation correlated blocks using ensemble models",
+  author   = "Xin Yu, De-Xin Kong",
+  journal  = "Bioinformatics",
+  year     = "2021",
+  volume   = ,
+  number   = ,
+  pages    = "btab415",
+  url      = "https://doi.org/10.1093/bioinformatics/btab415",
+  textVersion = paste(
+  "Xin Yu, De-Xin Kong, EnMCB: an R/bioconductor package for predicting disease progression based on methylation correlated blocks using ensemble models, Bioinformatics, 2021, btab415, https://doi.org/10.1093/bioinformatics/btab415."
+  )
+)
