@@ -6,8 +6,6 @@ citEntry(
   author   = "Xin Yu, De-Xin Kong",
   journal  = "Bioinformatics",
   year     = "2021",
-  volume   = ,
-  number   = ,
   pages    = "btab415",
   url      = "https://doi.org/10.1093/bioinformatics/btab415",
   textVersion = paste(
