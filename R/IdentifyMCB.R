@@ -34,8 +34,7 @@
 #' @export
 #'
 #' @references
-#' Xin Yu et al. 2019 Predicting disease progression in lung adenocarcinoma patients based on methylation correlated blocks using ensemble machine learning classifiers (under review)
-#'
+#' Xin Yu, De-Xin Kong, EnMCB: an R/bioconductor package for predicting disease progression based on methylation correlated blocks using ensemble models, Bioinformatics, 2021, btab415
 #'
 IdentifyMCB<-function(
   MethylationProfile,

@@ -42,7 +42,7 @@ ensemble_model <- function(single_res,
                            Surv_training, 
                            testing_set=NULL, 
                            Surv_testing=NULL,
-                           ensemble_type = "Cox") {
+                           ensemble_type = "Standard Cox") {
   if (dim(single_res)[1]>dim(single_res)[2]) {
     single_res<-t(as.matrix(single_res))
   }
@@ -94,7 +94,7 @@ ensemble_model <- function(single_res,
   rownames(data)<-c('cox','svm','enet','mboost')
   data<-t(data)
   data_f<-as.data.frame(data)
-  if (ensemble_type == "Cox"){
+  if (ensemble_type == "Standard Cox"){
     univ_models<-tryCatch(rms::cph(formula = Surv_training ~ cox + svm + enet + mboost ,data=data_f),error=function(e){NULL} )
   }else if (ensemble_type == "C-index"){
     #This will let the prediction function use the lambda.1st as the default lambda, which maximum the C-index.

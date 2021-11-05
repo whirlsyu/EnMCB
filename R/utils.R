@@ -701,4 +701,395 @@ s_t_x<-function (Stime, status, marker, entry = NULL, predict.time)
   ks_res<-ks.test(x=S.all.x,y="exp",alternative = "t")
   list(S.all.x = S.all.x,ks_res = ks_res)
 }
+
+#error metrics -- Confusion Matrix
+err_metric=function(CM,verbose = F)
+{
+  TP =CM[1,1]
+  TN =CM[2,2]
+  FP =CM[2,1]
+  FN =CM[1,2]
+  res = list()
+  res$precision =TP / (TP + FP)
+  res$recall_score =TP / (TP + FN)
+  res$f1_score=2*((res$precision*res$recall_score)/(res$precision+res$recall_score))
+  res$accuracy_model  = (TP+TN) / (TP+FN+FP+TN)
+  res$False_positive_rate = (FP)/(FP+TN)
+  res$False_negative_rate = (FN)/(FN+TP)
+  if (verbose == T) {
+    return(res)
+  }else{
+    print(paste("Precision value of the model: ",round(res$precision,2)))
+    print(paste("Accuracy of the model: ",round(res$accuracy_model,2)))
+    print(paste("Recall value of the model: ",round(res$recall_score,2)))
+    print(paste("False Positive rate of the model: ",round(res$False_positive_rate,2)))
+    print(paste("False Negative rate of the model: ",round(res$False_negative_rate,2)))
+    print(paste("F1 score of the model: ",round(res$f1_score,2)))
+  }
+}
+
+prepare_data_frame<-function(df_data){
+  final_data<-NULL
+  for (i in 1:ncol(df_data)) {
+    one_data<-data.frame(samples= 1:nrow(df_data),
+                         var_name=rep(colnames(df_data)[i],nrow(df_data)),
+                         var_num=df_data[,i])
+    final_data<-rbind(final_data,one_data)
+  }
+  final_data
+}
+
+get_the_loci <- function(CpGs,pos = TRUE){
+  CpGs_t<-strsplit(CpGs, " ")[[1]]
+  Illumina_Infinium_Human_Methylation_450K <- minfi::getAnnotation("IlluminaHumanMethylation450kanno.ilmn12.hg19")
+  met_cg_allgene <- Illumina_Infinium_Human_Methylation_450K[CpGs_t,]
+  if (pos) met_cg_allgene[,'pos'] else met_cg_allgene
+}
+
+findAttractors<-function (methylation_matrix, annotation, class_vector, 
+                          min.pwaysize = 5,base_method = c('Fstat','Tstat')[1], sec_method = c('ttest','kstest')[1] ,...) 
+{
+  
+  dat.fr <- methylation_matrix
+  all.probes <- rownames(dat.fr)
+  dat.fr <- as.matrix(dat.fr)
+  class.vector <- as.factor(class_vector)
+  all_included <- strsplit(paste(annotation[,'CpGs'],collapse = ' ')," ")[[1]]
+  probes.hits <- intersect(all.probes, all_included)
+  dat.detect.w <- dat.fr[rownames(dat.fr) %in% probes.hits,]
+  dat.detect.w <- as.matrix(dat.detect.w)
+  incidence.matrix <- buildIncidenceMatrix(rownames(dat.detect.w), annotation)
+  keep.mcb <- apply(incidence.matrix, 1, sum) >= min.pwaysize
+  incidence.matrix <- incidence.matrix[keep.mcb,]
+  new.order <- order(class.vector, colnames(dat.detect.w))
+  dat.detect.w <- dat.detect.w[, new.order]
+  class.vector <- class.vector[new.order]
+  
+  evalPway <- function(index, global,sec_method=c('ttest','kstest')[1]) {
+    pway.vals <- global[index == 1]
+    if (sec_method == 'ttest'){
+      return(t.test(pway.vals, global)$p.value)
+    }else if (sec_method == 'kstest'){
+      return(ks.test(pway.vals, global,exact = F)$p.value)
+    }
+  }
+  
+  if (base_method=='Fstat'){
+    fstat <- apply(dat.detect.w, 1, function(y, x) {
+      anova(lm(y ~ x))[[4]][1]
+    }, x = class.vector)
+    fstat <- log(fstat, 2)
+    t.pvals <- apply(incidence.matrix, 1, evalPway, global = fstat,sec_method=sec_method)
+  }else if (base_method=='Tstat'){
+    tstat <- apply(dat.detect.w, 1, function(y, x) {
+      t.test(y ~ x)$statistic
+    }, x = class.vector)
+    tstat <- log(abs(tstat), 2)
+    t.pvals <- apply(incidence.matrix, 1, evalPway, global = tstat,sec_method=sec_method)
+  }else{
+    stop('The method indicator base_method is invalid.')
+  }
+  t.pvals_adjust <- p.adjust(t.pvals, "BH")
+  size <- apply(incidence.matrix, 1, sum)
+  tab <- data.frame(MCBID = rownames(incidence.matrix),
+                    annotation[sapply(X = rownames(incidence.matrix),FUN = function(x){strsplit(x, "_")[[1]][2]}),],
+                    Pvalues = t.pvals,
+                    AdjustedPvalues = t.pvals_adjust, 
+                    NumberDetectedCpGs = size)
+  #rownames(tab)<-sapply(X = rownames(tab),FUN = function(x){strsplit(x, "_")[[1]][2]})
+  tab <- tab[order(t.pvals), ]
+  return(tab)
+}
+
+buildIncidenceMatrix<-function (gene.ids, annotation) 
+{
+  CpGs_names<-annotation[,'CpGs']
+  pway.genes <- strsplit(CpGs_names," ")
+  convert.to.row <- function(x.genes, row.genes) {
+    res <- integer(length(row.genes))
+    res[row.genes %in% x.genes] <- 1
+    return(res)
+  }
+  xmat <- t(sapply(lapply(pway.genes, convert.to.row, gene.ids), 
+                   cbind))
+  rownames(xmat) <- paste('MCB',annotation[,'MCB_no'],sep  = "_") 
+  colnames(xmat) <- gene.ids
+  return(xmat)
+}
+
+re_AnnotatedMMB<-function(MMB_list){
+  Illumina_Infinium_Human_Methylation_450K <- minfi::getAnnotation("IlluminaHumanMethylation450kanno.ilmn12.hg19")
+  met_cg_allgene <- Illumina_Infinium_Human_Methylation_450K
+  res<-rep(NA,7)
+  names(res)<-c('chromosomes','start_site','end_site','CpGs','location','length','CpGs_num')
+  res_all <-NULL
+  for (MMB in MMB_list) {
+    MMBannotated<-met_cg_allgene[MMB,]
+    res['chromosomes'] <- unique(MMBannotated$chr)
+    res['start_site']  <- min(MMBannotated$pos)
+    res['end_site']  <- max(MMBannotated$pos)
+    res['CpGs'] <-paste(MMBannotated$Name[order(MMBannotated$pos,decreasing = F)],collapse = " ")
+    res['location'] <-paste(res['chromosomes'],":",res['start_site'],'-',res['chromosomes'],':',res['end_site'],sep = " ")
+    res['length'] <- as.character(max(MMBannotated$pos)- min(MMBannotated$pos) )
+    res['CpGs_num'] <- nrow(MMBannotated)
+    res_all<-rbind(res_all,res)
+  }
+  rownames(res_all)<-1:nrow(res_all)
+  res_all
+}
+
+bmeasures_otu<-
+  function (x, y) 
+  {
+    dx <- dim(x)
+    dy <- dim(y)
+    if (dx[1] != dy[1]) {
+      cat("Inputs have different number of rows \n")
+    }
+    else if (dx[2] != dy[2]) {
+      cat("Inputs have different number of columns \n")
+    }
+    else {
+      cat("")
+    }
+    input <- as.matrix(rbind(x, y))
+    a <- 0
+    b <- 0
+    c <- 0
+    d <- 0
+    for (i in 1:dx[2]) {
+      k <- input[1, i]
+      l <- input[2, i]
+      if ((k == 1) & (l == 1)) {
+        a <- a + 1
+      }
+      else if ((k == 0) & (l == 1)) {
+        b <- b + 1
+      }
+      else if ((k == 1) & (l == 0)) {
+        c <- c + 1
+      }
+      else {
+        d <- d + 1
+      }
+    }
+    otu_out <- c(a = a, b = b, c = c, d = d)
+    remove(a, b, c, d)
+    return(otu_out)
+  }
+
+bmeasures <-
+  function (x, y, method = 'eq_01') 
+  {
+    x<-matrix(x,1)
+    y<-matrix(y,1)
+    otuTable <- bmeasures_otu(x, y)
+    a <- otuTable[1]
+    b <- otuTable[2]
+    c <- otuTable[3]
+    d <- otuTable[4]
+    n <- a + b + c + d
+    switch(method, eq_01 = {
+      coef <- a/(a + b + c)
+    }, eq_02 = {
+      coef <- a/(2 * a + b + c)
+    }, eq_03 = {
+      coef <- (2 * a)/(2 * a + b + c)
+    }, eq_04 = {
+      coef <- (3 * a)/(3 * a + b + c)
+    }, eq_05 = {
+      coef <- (2 * a)/((a + b) + (a + c))
+    }, eq_06 = {
+      coef <- a/(a + (2 * b) + (2 * c))
+    }, eq_07 = {
+      coef <- (a + d)/n
+    }, eq_08 = {
+      coef <- (2 * (a + d))/((2 * a) + b + c + (2 * d))
+    }, eq_09 = {
+      coef <- (a + d)/(a + (2 * (b + c)) + d)
+    }, eq_10 = {
+      coef <- (a + (0.5 * d))/n
+    }, eq_11 = {
+      coef <- (a + d)/(a + (0.5 * (b + c)) + d)
+    }, eq_12 = {
+      coef <- a
+    }, eq_13 = {
+      coef <- a + d
+    }, eq_14 = {
+      coef <- a/n
+    }, eq_15 = {
+      coef <- b + c
+    }, eq_16 = {
+      coef <- sqrt(b + c)
+    }, eq_17 = {
+      coef <- sqrt((b + c)^2)
+    }, eq_18 = {
+      coef <- sqrt((b + c)^2)
+    }, eq_19 = {
+      coef <- b + c
+    }, eq_20 = {
+      coef <- (b + c)/n
+    }, eq_21 = {
+      coef <- b + c
+    }, eq_22 = {
+      coef <- b + c
+    }, eq_23 = {
+      coef <- (b + c)/(4 * n)
+    }, eq_24 = {
+      coef <- ((b + c)^2)/(n^2)
+    }, eq_25 = {
+      coef <- ((n * (b + c)) - ((b - c)^2))/(n^2)
+    }, eq_26 = {
+      coef <- (4 * b * c)/(n^2)
+    }, eq_27 = {
+      coef <- (b + c)/(2 * a + b + c)
+    }, eq_28 = {
+      coef <- (b + c)/(2 * a + b + c)
+    }, eq_29 = {
+      coef <- 2 * (sqrt(1 - (a/sqrt((a + b) * (a + c)))))
+    }, eq_30 = {
+      coef <- (sqrt(2 * (1 - (a/(sqrt((a + b) * (a + c)))))))
+    }, eq_31 = {
+      coef <- a/(sqrt((a + b) * (a + c)))
+    }, eq_32 = {
+      coef <- log(a) - log(n) - log((a + b)/n) - log((a + c)/n)
+    }, eq_33 = {
+      coef <- a/(sqrt((a + b) * (a + c)))
+    }, eq_34 = {
+      coef <- (n * a)/((a + b) * (a + c))
+    }, eq_35 = {
+      coef <- (n * ((a - 0.5)^2))/((a + b) * (a + c))
+    }, eq_36 = {
+      coef <- (a^2)/((a + b) * (a + c))
+    }, eq_37 = {
+      coef <- a/(0.5 * (a * b + a * c) + (b * c))
+    }, eq_38 = {
+      coef <- a/(((a + b) * (a + c))^0.5)
+    }, eq_39 = {
+      coef <- ((a^2) - (b * c))/((a + b) * (a + c))
+    }, eq_40 = {
+      coef <- ((n * a) - (a + b) * (a + c))/((n * a) + (a + 
+                                                          b) * (a + c))
+    }, eq_41 = {
+      coef <- ((a/2) * (2 * a + b + c))/((a + b) * (a + c))
+    }, eq_42 = {
+      coef <- (a/2) * ((1/(a + b)) + (1/(a + c)))
+    }, eq_43 = {
+      coef <- (a/(a + b)) + (a/(a + c))
+    }, eq_44 = {
+      coef <- ((a * d) - (b * c))/(sqrt(n * (a + b) * (a + 
+                                                         c)))
+    }, eq_45 = {
+      coef <- a/(min((a + b), (a + c)))
+    }, eq_46 = {
+      coef <- a/(max((a + b), (a + c)))
+    }, eq_47 = {
+      coef <- (a/sqrt((a + b) * (a + c))) - (max((a + b), (a + 
+                                                             c))/2)
+    }, eq_48 = {
+      coef <- ((n * a) - ((a + b) * (a + c)))/((n * min(a + 
+                                                          b, a + c)) - (a + b) * (a + c))
+    }, eq_49 = {
+      coef <- 0.25 * ((a/(a + b)) + (a/(a + c)) + (d/(b + d)) + 
+                        (d/(c + d)))
+    }, eq_50 = {
+      coef <- (a + d)/(sqrt((a + b) * (a + c) * (b + d) * (c + 
+                                                             d)))
+    }, eq_51 = {
+      x2 <- (n * (((a * d) - (b * c))^2))/((a + b) * (a + c) * 
+                                             (c + d) * (b + d))
+      coef <- x2
+    }, eq_52 = {
+      x2 <- (n * (((a * d) - (b * c))^2))/((a + b) * (a + c) * 
+                                             (c + d) * (b + d))
+      coef <- sqrt(x2/(n + x2))
+    }, eq_53 = {
+      p <- ((a * d) - (b * c))/(sqrt((a + b) * (a + c) * (b + 
+                                                            d) * (c + d)))
+      coef <- sqrt(p/(n + p))
+    }, eq_54 = {
+      p <- ((a * d) - (b * c))/(sqrt((a + b) * (a + c) * (b + 
+                                                            d) * (c + d)))
+      coef <- p
+    }, eq_55 = {
+      coef <- cos((pi * sqrt(b * c))/(sqrt(a * d) + sqrt(b * 
+                                                           c)))
+    }, eq_56 = {
+      coef <- (a + d)/(b + c)
+    }, eq_57 = {
+      coef <- (a * d)/(((a + b) * (a + c) * (b + d) * (c + 
+                                                         d))^0.5)
+    }, eq_58 = {
+      coef <- (sqrt(2) * (a * d - b * c))/(sqrt(((a * d - b * 
+                                                    c)^2) - (a + b) * (a + c) * (b + d) * (c + d)))
+    }, eq_59 = {
+      coef <- log10((n * (((abs(a * d - b * c)) - n/2)^2))/((a + 
+                                                               b) * (a + c) * (b + d) * (c + d)))
+    }, eq_60 = {
+      coef <- (a * d)/(sqrt((a + b) * (a + c) * (b + d) * (c + 
+                                                             d)))
+    }, eq_61 = {
+      coef <- (a * d - b * c)/(a * d + b * c)
+    }, eq_62 = {
+      coef <- ((2 * b * c)/(a * d + b * c))
+    }, eq_63 = {
+      coef <- (sqrt(a * d) - sqrt(b * c))/(sqrt(a * d) + sqrt(b * 
+                                                                c))
+    }, eq_64 = {
+      coef <- a/(b + c)
+    }, eq_65 = {
+      coef <- a/((a + b) + (a + c) - a)
+    }, eq_66 = {
+      coef <- (a * d - b * c)/(n^2)
+    }, eq_67 = {
+      coef <- ((a + d) - (b + c))/n
+    }, eq_68 = {
+      coef <- (4 * (a * d - b * c))/(((a + d)^2) + ((b + c)^2))
+    }, eq_69 = {
+      sig <- max(a, b) + max(c, d) + max(a, c) + max(b, d)
+      sigt <- max(a + c, b + d) + max(a + b, c + d)
+      coef <- (sig - sigt)/(2 * n - sigt)
+    }, eq_70 = {
+      sig <- max(a, b) + max(c, d) + max(a, c) + max(b, d)
+      sigt <- max(a + c, b + d) + max(a + b, c + d)
+      coef <- (sig - sigt)/(2 * n)
+    }, eq_71 = {
+      coef <- (sqrt(a * d) + a)/(sqrt(a * d) + a + b + c)
+    }, eq_72 = {
+      coef <- (sqrt(a * d) + a - (b + c))/(sqrt(a * d) + a + 
+                                             b + c)
+    }, eq_73 = {
+      coef <- (a * b + b * c)/((a * b) + (2 * b * c) + (c * 
+                                                          d))
+    }, eq_74 = {
+      coef <- ((n^2) * (n * a - (a + b) * (a + c)))/((a + b) * 
+                                                       (a + c) * (b + d) * (c + d))
+    }, eq_75 = {
+      coef <- (a * (c + d))/(c * (a + b))
+    }, eq_76 = {
+      coef <- abs((a * (c + d))/(c * (a + b)))
+    }, eq_77 = {
+      coef <- log(1 + a)/log(1 + n)
+    }, eq_78 = {
+      coef <- log(1 + a)/log(1 + a + b + c)
+    }, eq_79 = {
+      coef <- (log(1 + a * d) - log(1 + b * c))/log(1 + (n^2)/4)
+    }, {
+      cat("No desired equation. Please check it again.")
+    })
+    if (is.na(coef)) coef = 1
+    result <- c(a, b, c, d, coef)
+    result <- t(as.matrix(result))
+    colnames(result) <- c("a", "b", "c", "d", 
+                          "coef")
+    return(coef)
+  }
+
+vector_to_matrix<-function(x){
+  list_data<-x[grep('X',names(x))]
+  matrix_data <-unlist((lapply(list_data,function(x){strsplit(x," ")[[1]]})))
+  mat<-as.numeric_matrix(matrix(matrix_data,nrow = length(matrix_data)/14,ncol = 14))
+  rownames(mat)<-strsplit(as.character(x['CpGs']),' ')[[1]]
+  mat
+}
 # end load
