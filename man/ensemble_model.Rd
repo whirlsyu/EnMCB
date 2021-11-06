@@ -18,7 +18,8 @@ Surv_testing,ensemble_type)
 
 \item{Surv_testing}{Survival function contain the survival information for testing.}
 
-\item{ensemble_type}{Secondary model use for ensemble, one of Cox and C-index.}
+\item{ensemble_type}{Secondary model use for ensemble, one of "Cox", "C-index" and "feature weighted linear regression".
+"feature weighted linear regression" only uses two meta-features namely kurtosis and S.D.}
 }
 \value{
 Object of class \code{list} with elements (XXX repesents the model you choose):

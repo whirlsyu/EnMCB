@@ -48,8 +48,19 @@ ensemble_prediction <- function(ensemble_model,prediction_data, multiple_results
   rownames(data)<-c('cox','svm','enet','mboost')
   data<-t(data)
   data_f<-as.data.frame(data)
-  if (class(ensemble_model$stacking)[1] == "cv.glmnet")
-    return(stats::predict(ensemble_model$stacking, as.matrix(data_f)))
+  if (class(ensemble_model$stacking)[1] == "cv.glmnet"){
+    if (is.null(ensemble_model$stacking$ensemble_type)){
+      return(stats::predict(ensemble_model$stacking, as.matrix(data_f)))
+    }else{
+      f1<-apply(data_f,1,function(x)e1071::kurtosis(x))
+      f2<-apply(data_f,1,function(x)(-log(sd(x),2)))
+      data_f<-data.frame(f1cox=data_f$cox*f1,f2cox=data_f$cox*f2,
+                         f1svm=data_f$svm*f1,f2svm=data_f$svm*f2,
+                         f1enet=data_f$enet*f1,f2enet=data_f$enet*f2,
+                         f1mboost=data_f$mboost*f1,f2mboost=data_f$mboost*f2)
+      return(stats::predict(ensemble_model$stacking, as.matrix(data_f)))
+    }
+  }
   else if (class(ensemble_model$stacking)[1] == "cph")
     return(stats::predict(ensemble_model$stacking, as.matrix(data_f)))
   else
