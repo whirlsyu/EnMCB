@@ -7,7 +7,8 @@
 #' @param Surv_training Survival function contain the survival information for training.
 #' @param testing_set methylation matrix used for testing the model in the analysis.
 #' @param Surv_testing Survival function contain the survival information for testing.
-#' @param ensemble_type Secondary model use for ensemble, one of Cox and C-index.
+#' @param ensemble_type Secondary model use for ensemble, one of "Cox", "C-index" and "feature weighted linear regression".
+#' "feature weighted linear regression" only uses two meta-features namely kurtosis and S.D.
 #' @author Xin Yu
 #' @keywords methylation ensemble stacking
 #' @usage ensemble_model(single_res,training_set,Surv_training,testing_set,
@@ -103,6 +104,19 @@ ensemble_model <- function(single_res,
                                             Surv_training[!is.na(Surv_training)],
                                             family='cox',type.measure = 'C'),
                           error=function(e){NULL} )
+  }else if (ensemble_type == "feature weighted linear regression"){
+  f1<-apply(data_f,1,function(x)e1071::kurtosis(x))
+  f2<-apply(data_f,1,function(x)sd(x))
+  data_f<-data.frame(f1cox=data_f$cox*f1,f2cox=data_f$cox*f2,
+                     f1svm=data_f$svm*f1,f2svm=data_f$svm*f2,
+                     f1enet=data_f$enet*f1,f2enet=data_f$enet*f2,
+                     f1mboost=data_f$mboost*f1,f2mboost=data_f$mboost*f2)
+  
+  univ_models<-tryCatch(glmnet::cv.glmnet(x=as.matrix(data_f[!is.na(Surv_training),]),
+                                          Surv_training[!is.na(Surv_training)],
+                                          family='cox',type.measure = 'C'),
+                        error=function(e){NULL} )
+  univ_models$ensemble_type = "feature weighted linear regression"
   }else{
     warning("unsupported ensemble type! must be one of Cox and C-index")
     stop(0)
