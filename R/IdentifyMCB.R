@@ -50,7 +50,13 @@ IdentifyMCB<-function(
   cat("Start calculating the correlation, this may take a while...\n")
   FunctionResults<-list()
   Illumina_Infinium_Human_Methylation_450K<-minfi::getAnnotation("IlluminaHumanMethylation450kanno.ilmn12.hg19")
-  met_cg_allgene<-Illumina_Infinium_Human_Methylation_450K[rownames(MethylationProfile),]
+  Illumina_Infinium_Human_Methylation_450K<-Illumina_Infinium_Human_Methylation_450K[!is.na(Illumina_Infinium_Human_Methylation_450K[,'pos']),]
+  
+  intersect_cpg<-intersect(rownames(Illumina_Infinium_Human_Methylation_450K),rownames(MethylationProfile))
+  
+  met_cg_allgene<-Illumina_Infinium_Human_Methylation_450K[intersect_cpg,]
+  MethylationProfile<-MethylationProfile[intersect_cpg,]
+  
   chromosomes<-unique(met_cg_allgene[,'chr'])
   chromosomes<-chromosomes[order(chromosomes)]
   res=NULL
