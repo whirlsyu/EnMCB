@@ -88,5 +88,5 @@ DiffMCB<-function(
                                            ncol = length(pattern_codes))  ) ])
     }
     MCB_no<-seq(nrow(ref_MMB))
-    data.frame(ref_MMB,patterns,bscore)
+    data.frame(MCB_no,ref_MMB,patterns,bscore)
 }
