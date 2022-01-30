@@ -1,4 +1,27 @@
 # load private functions
+get450kAnno = function() {
+  
+  ca = BiocFileCache::BiocFileCache()
+  
+  q = BiocFileCache::bfcquery(ca, "450kanno.ilmn12.hg19")
+  
+  if (length(q$rpath)>0) return(readRDS(rev(q$rpath)[1])) # if multiple, use last
+  
+  if (!requireNamespace("minfi")) stop("install the minfi package to use this function")
+  
+  anno = minfi::getAnnotation("IlluminaHumanMethylation450kanno.ilmn12.hg19")
+  
+  tf = tempfile()
+  
+  saveRDS(anno, tf)
+  
+  BiocFileCache::bfcadd(ca, rname="IlluminaHumanMethylation450kanno.ilmn12.hg19", fpath=tf,
+                        
+                        action="move")  # for future
+  
+  anno
+  
+}
 
 print_as_data <- function(variables,file) {
   sink(file)
@@ -741,7 +764,7 @@ prepare_data_frame<-function(df_data){
 
 get_the_loci <- function(CpGs,pos = TRUE){
   CpGs_t<-strsplit(CpGs, " ")[[1]]
-  Illumina_Infinium_Human_Methylation_450K <- minfi::getAnnotation("IlluminaHumanMethylation450kanno.ilmn12.hg19")
+  Illumina_Infinium_Human_Methylation_450K <- get450kAnno()
   met_cg_allgene <- Illumina_Infinium_Human_Methylation_450K[CpGs_t,]
   if (pos) met_cg_allgene[,'pos'] else met_cg_allgene
 }
@@ -818,7 +841,7 @@ buildIncidenceMatrix<-function (gene.ids, annotation)
 }
 
 re_AnnotatedMMB<-function(MMB_list){
-  Illumina_Infinium_Human_Methylation_450K <- minfi::getAnnotation("IlluminaHumanMethylation450kanno.ilmn12.hg19")
+  Illumina_Infinium_Human_Methylation_450K <- get450kAnno()
   met_cg_allgene <- Illumina_Infinium_Human_Methylation_450K
   res<-rep(NA,7)
   names(res)<-c('chromosomes','start_site','end_site','CpGs','location','length','CpGs_num')
@@ -1092,4 +1115,7 @@ vector_to_matrix<-function(x){
   rownames(mat)<-strsplit(as.character(x['CpGs']),' ')[[1]]
   mat
 }
+
+
+
 # end load

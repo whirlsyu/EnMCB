@@ -49,7 +49,7 @@ IdentifyMCB<-function(
   }
   cat("Start calculating the correlation, this may take a while...\n")
   FunctionResults<-list()
-  Illumina_Infinium_Human_Methylation_450K<-minfi::getAnnotation("IlluminaHumanMethylation450kanno.ilmn12.hg19")
+  Illumina_Infinium_Human_Methylation_450K<-get450kAnno()
   Illumina_Infinium_Human_Methylation_450K<-Illumina_Infinium_Human_Methylation_450K[!is.na(Illumina_Infinium_Human_Methylation_450K[,'pos']),]
   
   intersect_cpg<-intersect(rownames(Illumina_Infinium_Human_Methylation_450K),rownames(MethylationProfile))
