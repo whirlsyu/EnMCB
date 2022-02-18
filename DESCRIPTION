@@ -22,10 +22,8 @@ Suggests:
     prognosticROC,
     minfi,
     rmarkdown
-Description: Creation of the correlated blocks using DNA methylation 
-    profiles. A stacked ensemble of machine learning models, 
-    which combined the cox, support vector machine and elastic-net 
-    regression model, can be constructed to predict disease progression.
+Description: Creation of the correlated blocks using DNA methylation profiles. 
+    Machine learning models can be constructed to predict differentially methylated blocks and disease progression.
 License: GPL-2
 BugReports: https://github.com/whirlsyu/EnMCB/issues
 biocViews: Normalization, DNAMethylation, MethylationArray, SupportVectorMachine
