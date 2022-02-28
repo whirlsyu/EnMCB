@@ -5,7 +5,7 @@ Type: Package
 
 Title: Predicting Disease Progression Based on Methylation Correlated Blocks using Ensemble Models
         
-Version: 1.3.1
+Version: 1.7.3
 
 Author: Xin Yu
 
@@ -60,8 +60,19 @@ and select some of MCBs for further modeling.
 
 <pre>
 
-MCB<-MCB[MCB[,"CpGs_num"]>2,]
+MCB<-MCB[MCB[,"CpGs_num"]>5,]
 
+</pre>
+
+In order to get differentially methylated blocks, one may run following:
+
+<pre>
+#simulation for the group data
+groups = c(rep("control",200),rep("dis",255))
+
+DiffMCB_resutls<-DiffMCB(methylation_dataset,
+                         groups,
+                         MCB)$tab
 </pre>
 
 In order to build models, one may run following:
