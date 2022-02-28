@@ -22,7 +22,15 @@ Note: This package is still under developing. Some of the functions may be furth
 
 Followings are brief instructions for using this package:
 
-You can install and test our package by downloading source package.
+You can install and our package using BiocManager as following or by downloading source from github.
+
+<pre>
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("EnMCB")
+</pre>
+
 
 First, you need a methylation data set, currently only most common platform 'Illumina Infinium Human Methylation 450K' is supported.
 
