@@ -75,7 +75,7 @@ DiffMCB_resutls<-DiffMCB(methylation_dataset,
                          MCB)$tab
 </pre>
 
-In order to build models, one may run following:
+In order to build survival models, one may run following:
 
 <pre>
 # sample the dataset into training set and testing set
