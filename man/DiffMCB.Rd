@@ -7,7 +7,7 @@
 DiffMCB(
   methylation_matrix,
   class_vector,
-  mcb_results = NULL,
+  mcb_matrix = NULL,
   min.cpgsize = 5,
   base_method = c("Fstat", "Tstat", "eBayes")[1],
   sec_method = c("ttest", "kstest")[1],
@@ -19,6 +19,8 @@ DiffMCB(
 
 \item{class_vector}{class vectors that indicated the groups.}
 
+\item{mcb_matrix}{p value threshold for the test.}
+
 \item{min.cpgsize}{threshold for minimum CpGs must included in the individual MCBs.}
 
 \item{base_method}{base method used for calculation of differentially methylated regions,
@@ -26,7 +28,7 @@ should be one of 'Fstat','Tstat','eBayes'. Defualt is Fstat.}
 
 \item{sec_method}{secondly method in attractor framework, should be one of 'kstest','ttest'. Defualt is ttest.}
 
-\item{annotation}{p value threshold for the test.}
+\item{...}{other parameters pass to the function.}
 }
 \value{
 Object of class \code{list} with elements:
@@ -48,8 +50,9 @@ The methylation profile need to convert into matrix format.
 data('demo_data', package = "EnMCB")
 data('demo_survival_data', package = "EnMCB")
 data('demo_MCBinformation', package = "EnMCB")
-#using survival censoring as group label just for demo, may replace with disease and control group in real use.
-diffMCB_results <- DiffMCB(demo_data$realdata,demo_survival_data[,2],demo_MCBinformation)
+#Using survival censoring as group label just for demo, 
+#this may replace with disease and control group in real use.
+diffMCB_results <- DiffMCB(demo_data$realdata,demo_survival_data[,2], demo_MCBinformation)
 
 }
 \references{

@@ -9,11 +9,12 @@
 #'
 #' @param methylation_matrix methylation profile matrix.
 #' @param class_vector class vectors that indicated the groups.
-#' @param annotation p value threshold for the test.
+#' @param mcb_matrix p value threshold for the test.
 #' @param min.cpgsize threshold for minimum CpGs must included in the individual MCBs.
 #' @param base_method base method used for calculation of differentially methylated regions,
 #' should be one of 'Fstat','Tstat','eBayes'. Defualt is Fstat.
 #' @param sec_method secondly method in attractor framework, should be one of 'kstest','ttest'. Defualt is ttest.
+#' @param ... other parameters pass to the function.
 #'
 #' @author Xin Yu
 #' @return
@@ -26,8 +27,9 @@
 #' data('demo_data', package = "EnMCB")
 #' data('demo_survival_data', package = "EnMCB")
 #' data('demo_MCBinformation', package = "EnMCB")
-#' #using survival censoring as group label just for demo, may replace with disease and control group in real use.
-#' diffMCB_results <- DiffMCB(demo_data$realdata,demo_survival_data[,2],demo_MCBinformation)
+#' #Using survival censoring as group label just for demo, 
+#' #this may replace with disease and control group in real use.
+#' diffMCB_results <- DiffMCB(demo_data$realdata,demo_survival_data[,2], demo_MCBinformation)
 #'
 #' @export
 #'
@@ -38,7 +40,7 @@
 DiffMCB<-function(
   methylation_matrix,
   class_vector, 
-  mcb_results = NULL, 
+  mcb_matrix = NULL, 
   min.cpgsize = 5,
   base_method = c('Fstat','Tstat','eBayes')[1], 
   sec_method = c('ttest','kstest')[1],
@@ -53,7 +55,7 @@ DiffMCB<-function(
   all.probes <- rownames(dat.fr)
   dat.fr <- as.matrix(dat.fr)
   class.vector <- as.factor(class_vector)
-  annotation <- mcb_results
+  annotation <- mcb_matrix
 
   all_included <- strsplit(paste(annotation[,'CpGs'],collapse = ' ')," ")[[1]]
   probes.hits <- intersect(all.probes, all_included)

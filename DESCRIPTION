@@ -21,6 +21,7 @@ Suggests:
     plotROC,
     prognosticROC,
     minfi,
+    limma,
     rmarkdown
 Description: Creation of the correlated blocks using DNA methylation profiles. 
     Machine learning models can be constructed to predict differentially methylated blocks and disease progression.
