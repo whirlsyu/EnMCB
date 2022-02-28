@@ -2,6 +2,7 @@
 
 S3method(as.data.frame,ridgemat)
 S3method(predict,mcb.coxph.penal)
+export(CompareMCB)
 export(DiffMCB)
 export(IdentifyMCB)
 export(as.ridgemat)

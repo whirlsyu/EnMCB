@@ -5,42 +5,51 @@
 \title{Differential expressed methylation correlated blocks}
 \usage{
 DiffMCB(
-  MCBs,
-  method = c("attractors")[1],
-  p_value = 0.05,
-  min_CpGs = 5,
-  platform = "Illumina Methylation 450K"
+  methylation_matrix,
+  class_vector,
+  mcb_results = NULL,
+  min.cpgsize = 5,
+  base_method = c("Fstat", "Tstat", "eBayes")[1],
+  sec_method = c("ttest", "kstest")[1],
+  ...
 )
 }
 \arguments{
-\item{MCBs}{Methylation correlated blocks list.}
+\item{methylation_matrix}{methylation profile matrix.}
 
-\item{method}{method used for calculation of differential expression, \cr
-should be one of "attractors","t-test". Defualt is "attractors".}
+\item{class_vector}{class vectors that indicated the groups.}
 
-\item{p_value}{p value threshold for the test.}
+\item{min.cpgsize}{threshold for minimum CpGs must included in the individual MCBs.}
 
-\item{min_CpGs}{threshold for minimum CpGs must included in the individual MCBs.}
+\item{base_method}{base method used for calculation of differentially methylated regions,
+should be one of 'Fstat','Tstat','eBayes'. Defualt is Fstat.}
 
-\item{platform}{This parameter indicates the platform used to produce the methlyation profile.}
+\item{sec_method}{secondly method in attractor framework, should be one of 'kstest','ttest'. Defualt is ttest.}
+
+\item{annotation}{p value threshold for the test.}
 }
 \value{
 Object of class \code{list} with elements:
  \tabular{ll}{
-   \code{MCBsites} \tab Character set contains all CpG sites in MCBs. \cr
-   \code{MCBinformation} \tab Matrix contains the information of results. \cr
+   \code{global} \tab Character set contains statistical value for all CpG sites in MCBs. \cr
+   \code{tab} \tab Matrix contains the information of results. \cr
  }
 }
 \description{
-This function is used to find the Methylation correlated blocks that differentially expressed between groups. 
+This function is used to find the Methylation correlated blocks that differentially expressed between groups based on the attractor framework. 
 This function calculates attractors of all the MCBs among the groups and find the attractor MCBs. \cr
 }
 \details{
-Currently, only illumina 450k platform is supported, the methylation profile need to convert into matrix format.
+Currently, only illumina 450k platform is supported. \cr
+If you want to use other platform, please provide the annotation file with CpG's chromosome and loci. \cr
+The methylation profile need to convert into matrix format.
 }
 \examples{
-data('demo_data',package = "EnMCB")
-
+data('demo_data', package = "EnMCB")
+data('demo_survival_data', package = "EnMCB")
+data('demo_MCBinformation', package = "EnMCB")
+#using survival censoring as group label just for demo, may replace with disease and control group in real use.
+diffMCB_results <- DiffMCB(demo_data$realdata,demo_survival_data[,2],demo_MCBinformation)
 
 }
 \references{

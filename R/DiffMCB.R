@@ -1,27 +1,33 @@
 #' @title  Differential expressed methylation correlated blocks
 #'
-#' @description This function is used to find the Methylation correlated blocks that differentially expressed between groups. 
+#' @description This function is used to find the Methylation correlated blocks that differentially expressed between groups based on the attractor framework. 
 #' This function calculates attractors of all the MCBs among the groups and find the attractor MCBs. \cr
 #'
-#' @details Currently, only illumina 450k platform is supported, the methylation profile need to convert into matrix format.
+#' @details Currently, only illumina 450k platform is supported. \cr
+#' If you want to use other platform, please provide the annotation file with CpG's chromosome and loci. \cr
+#' The methylation profile need to convert into matrix format.
 #'
-#' @param MCBs Methylation correlated blocks list.
-#' @param method method used for calculation of differential expression, \cr
-#' should be one of "attractors","t-test". Defualt is "attractors".
-#' @param p_value p value threshold for the test.
-#' @param min_CpGs threshold for minimum CpGs must included in the individual MCBs.
-#' @param platform This parameter indicates the platform used to produce the methlyation profile.
+#' @param methylation_matrix methylation profile matrix.
+#' @param class_vector class vectors that indicated the groups.
+#' @param annotation p value threshold for the test.
+#' @param min.cpgsize threshold for minimum CpGs must included in the individual MCBs.
+#' @param base_method base method used for calculation of differentially methylated regions,
+#' should be one of 'Fstat','Tstat','eBayes'. Defualt is Fstat.
+#' @param sec_method secondly method in attractor framework, should be one of 'kstest','ttest'. Defualt is ttest.
 #'
 #' @author Xin Yu
 #' @return
 #' Object of class \code{list} with elements:
 #'  \tabular{ll}{
-#'    \code{MCBsites} \tab Character set contains all CpG sites in MCBs. \cr
-#'    \code{MCBinformation} \tab Matrix contains the information of results. \cr
+#'    \code{global} \tab Character set contains statistical value for all CpG sites in MCBs. \cr
+#'    \code{tab} \tab Matrix contains the information of results. \cr
 #'  }
 #' @examples
-#' data('demo_data',package = "EnMCB")
-#' 
+#' data('demo_data', package = "EnMCB")
+#' data('demo_survival_data', package = "EnMCB")
+#' data('demo_MCBinformation', package = "EnMCB")
+#' #using survival censoring as group label just for demo, may replace with disease and control group in real use.
+#' diffMCB_results <- DiffMCB(demo_data$realdata,demo_survival_data[,2],demo_MCBinformation)
 #'
 #' @export
 #'
@@ -30,63 +36,85 @@
 #'
 #'
 DiffMCB<-function(
-  MCBs,
-  method=c("attractors")[1],
-  p_value = 0.05,
-  min_CpGs = 5,
-  platform = "Illumina Methylation 450K"
+  methylation_matrix,
+  class_vector, 
+  mcb_results = NULL, 
+  min.cpgsize = 5,
+  base_method = c('Fstat','Tstat','eBayes')[1], 
+  sec_method = c('ttest','kstest')[1],
+  ...
 ){
-    union_cpgs<-list()
-    i = 1
-    for (MCB in MCBs) {
-      nrow_MCB<-nrow(MCB)
-      if (nrow_MCB==0){
-        stop("compare MCB: the MCB info matrix doesn't include any data, please check the data.")
-      }
-      for (j in seq(nrow_MCB)) {
-        CpG_list<-strsplit(paste(MCB[j, "CpGs"], collapse = " "), " ")[[1]]
-        if (length(CpG_list)>=min_CpGs){
-          union_cpgs[[i]]<-CpG_list
-          i = i + 1
-        }
-      }
+  if (is.matrix(methylation_matrix)) {
+    dat.fr <- methylation_matrix
+  } else {
+    warning("The input parameter methylation_matrix must be a matrix. \n
+            Now converting it into matrix.\n")
+  }
+  all.probes <- rownames(dat.fr)
+  dat.fr <- as.matrix(dat.fr)
+  class.vector <- as.factor(class_vector)
+  annotation <- mcb_results
+
+  all_included <- strsplit(paste(annotation[,'CpGs'],collapse = ' ')," ")[[1]]
+  probes.hits <- intersect(all.probes, all_included)
+  dat.detect.w <- dat.fr[rownames(dat.fr) %in% probes.hits,]
+  dat.detect.w <- as.matrix(dat.detect.w)
+  incidence.matrix <- buildIncidenceMatrix(rownames(dat.detect.w), annotation)
+  keep.mcb <- apply(incidence.matrix, 1, sum) >= min.cpgsize
+  incidence.matrix <- incidence.matrix[keep.mcb,]
+  new.order <- order(class.vector, colnames(dat.detect.w))
+  dat.detect.w <- dat.detect.w[, new.order]
+  class.vector <- class.vector[new.order]
+  
+  evalMCB <- function(index, global,sec_method=c('ttest','kstest')[1]) {
+    pway.vals <- global[index == 1]
+    if (sec_method == 'ttest'){
+      res<-t.test(pway.vals, global)
+    }else if (sec_method == 'kstest'){
+      res<-ks.test(pway.vals, global[index == 0])
     }
-    i = rep(1:length(union_cpgs), lengths(union_cpgs)) 
-    j = factor(unlist(union_cpgs))
-    tab = Matrix::sparseMatrix(i = i, j = as.integer(j), x = TRUE, dimnames = list(NULL, levels(j)))
-    connects = Matrix::tcrossprod(tab, boolArith = TRUE)
-    # 'graph_from_adjacency_matrix' seems to not work with the "connects" object directly. 
-    # An alternative to coercing "connects" here would be to build it as 'tcrossprod(tab) > 0'
-    group = igraph::clusters(igraph::graph_from_adjacency_matrix(as(connects, "lsCMatrix")))$membership
-    #group
-    #[1] 1 2 2 2 3 3
-    CpGs_MMB<-tapply(union_cpgs, group, function(x) sort(unique(unlist(x))))
-    ref_MMB<-re_AnnotatedMMB(CpGs_MMB)
-    patterns<-matrix(NA,nrow = nrow(ref_MMB),ncol = length(MCBs))
-    bscore<-rep(NA,nrow(ref_MMB))
-    bar<-utils::txtProgressBar(min = 1,max = nrow(ref_MMB),char = "#",style = 3)
-    for (i in seq(nrow(ref_MMB))) {
-      utils::setTxtProgressBar(bar, i)
-      CpG_list<-strsplit(paste(ref_MMB[i,'CpGs'], collapse = " "), " ")[[1]]
-      pattern_codes<-NULL
-      for (j in seq(length(MCBs))) {
-        pattern_code<-NULL
-        for (CpG in CpG_list) {
-          
-          if (is.integer0(grep(CpG,MCBs[[j]][,'CpGs']))){
-            pattern_code<-c(pattern_code,0)
-          }else{
-            pattern_code<-c(pattern_code,1)
-          }
-        }
-        patterns[i,j]<-paste(pattern_code,collapse = ' ')
-        pattern_codes[[j]]<-pattern_code
-      }
-      bscore[i] <- mean(outer(pattern_codes,pattern_codes,Vectorize(bmeasures))
-                        [upper.tri( matrix(NA,
-                                           nrow = length(pattern_codes),
-                                           ncol = length(pattern_codes))  ) ])
-    }
-    MCB_no<-seq(nrow(ref_MMB))
-    data.frame(MCB_no,ref_MMB,patterns,bscore)
+    return(c(res$statistic, res$p.value))
+  }
+  res<-list()
+  if (base_method=='Fstat'){
+    fstat <- apply(dat.detect.w, 1, function(y, x) {
+      anova(lm(y ~ x))[[4]][1]
+    }, x = class.vector)
+    res$global <- fstat
+    fstat <- log(fstat, 2)
+    t.pvals <- apply(incidence.matrix, 1, evalMCB, global = fstat,sec_method=sec_method)
+  }else if (base_method=='Tstat'){
+    tstat <- apply(dat.detect.w, 1, function(y, x) {
+      t.test(y ~ x)$statistic
+    }, x = class.vector)
+    res$global <- tstat
+    tstat <- log(abs(tstat), 2)
+    t.pvals <- apply(incidence.matrix, 1, evalMCB, global = tstat,sec_method=sec_method)
+  }else if(base_method=='eBayes'){
+    design<-model.matrix(~class.vector)
+    fitlim<-limma::lmFit(dat.detect.w,design)
+    fiteb<-limma::eBayes(fitlim)
+    DEG<-limma::topTable(fiteb,coef=length(unique(class.vector)),n=nrow(dat.detect.w),p.value=1)
+    DEG<-DEG[rownames(dat.detect.w),]
+    tstat<-DEG$t
+    res$global <- tstat
+    tstat <- log(abs(tstat), 2)
+    t.pvals <- apply(incidence.matrix, 1, evalMCB, global = tstat, sec_method=sec_method)
+  }else{
+    stop('The method indicator base_method is invalid.')
+  }
+  t.pvals_adjust <- p.adjust(as.numeric(t.pvals[2,]), "BH")
+  ##cat(dim(t.pvals))
+  
+  size <- apply(incidence.matrix, 1, sum)
+  tab <- data.frame(MCBID = rownames(incidence.matrix),
+                    annotation[sapply(X = rownames(incidence.matrix),FUN = function(x){strsplit(x, "_")[[1]][2]}),],
+                    statistic = as.numeric(t.pvals[1,]),
+                    Pvalues = as.numeric(t.pvals[2,]),
+                    AdjustedPvalues = t.pvals_adjust, 
+                    NumberDetectedCpGs = size)
+  #rownames(tab)<-sapply(X = rownames(tab),FUN = function(x){strsplit(x, "_")[[1]][2]})
+  tab <- tab[order(t.pvals[2,]), ]
+  res$tab<-tab
+  return(res)
 }
