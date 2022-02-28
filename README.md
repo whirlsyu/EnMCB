@@ -43,8 +43,8 @@ eset_met<-some_methylation_datamatrix
 or use our demo data.
 
 <pre>
-data(demo_set)
-
+data('demo_data',package = "EnMCB")
+methylation_dataset<-demo_data$realdata
 </pre>
 
 
@@ -53,7 +53,8 @@ Then, you can automatically run following:
 <pre>
 library(SummarizedExperiment)
 
-res<-IdentifyMCB(assays(demo_set)[[1]])
+res<-IdentifyMCB(methylation_dataset)
+
 </pre>
 
 You can extract the MCB information,
@@ -78,16 +79,17 @@ In order to get differentially methylated blocks, one may run following:
 #simulation for the group data
 groups = c(rep("control",200),rep("dis",255))
 
-DiffMCB_resutls<-DiffMCB(methylation_dataset,
-                         groups,
-                         MCB)$tab
+diffMCB_results <- DiffMCB(methylation_dataset, groups, MCB)
+
 </pre>
 
 In order to build survival models, one may run following:
 
 <pre>
+data(demo_survival_data)
+survival_data <- demo_survival_data
 # sample the dataset into training set and testing set
-trainingset<-colnames(demo_set) %in% sample(colnames(demo_set),0.6*length(colnames(demo_set)))
+trainingset<-colnames(methylation_dataset) %in% sample(colnames(methylation_dataset),0.6*length(colnames(methylation_dataset)))
 
 testingset<-!trainingset
 
