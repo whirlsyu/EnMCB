@@ -13,7 +13,8 @@
 #' @param method method used for calculation of correlation, \cr
 #' should be one of "pearson","spearman","kendall". Defualt is "pearson".
 #' @param PositionGap CpG Gap between any two CpGs positioned CpG sites less than 1000 bp (default) will be calculated.
-#' @param platform This parameter indicates the platform used to produce the methlyation profile.
+#' @param platform This parameter indicates the platform used to produce the methlyation profile. 
+#' You can use your own annotation file.
 #'
 #' @author Xin Yu
 #' @return
@@ -49,12 +50,17 @@ IdentifyMCB<-function(
   }
   cat("Start calculating the correlation, this may take a while...\n")
   FunctionResults<-list()
-  Illumina_Infinium_Human_Methylation_450K<-get450kAnno()
-  Illumina_Infinium_Human_Methylation_450K<-Illumina_Infinium_Human_Methylation_450K[!is.na(Illumina_Infinium_Human_Methylation_450K[,'pos']),]
-  
-  intersect_cpg<-intersect(rownames(Illumina_Infinium_Human_Methylation_450K),rownames(MethylationProfile))
-  
-  met_cg_allgene<-Illumina_Infinium_Human_Methylation_450K[intersect_cpg,]
+  if (platform == "Illumina Methylation 450K"){
+    Illumina_Infinium_Human_Methylation_450K<-get450kAnno()
+    Illumina_Infinium_Human_Methylation_450K<-Illumina_Infinium_Human_Methylation_450K[!is.na(Illumina_Infinium_Human_Methylation_450K[,'pos']),]
+    
+    intersect_cpg<-intersect(rownames(Illumina_Infinium_Human_Methylation_450K),rownames(MethylationProfile))
+    
+    met_cg_allgene<-Illumina_Infinium_Human_Methylation_450K[intersect_cpg,]
+  }else{
+    met_cg_allgene = platform
+  }
+
   MethylationProfile<-MethylationProfile[intersect_cpg,]
   
   chromosomes<-unique(met_cg_allgene[,'chr'])
