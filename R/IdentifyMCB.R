@@ -120,8 +120,9 @@ IdentifyMCB<-function(
   MCBsites<-MCBsites[order(MCBsites)]
   FunctionResults$MCBsites<-rownames(MethylationProfile)[MCBsites]
 
-  MCB<-rep(NA,times=7)
-  names(MCB)<-c("MCB_no","start","end","CpGs","location","chromosomes","length")
+  MCB<-rep(NA,times=10)
+  names(MCB)<-c("MCB_no","start","end","CpGs","location","chromosomes",
+                "length","MCB_Gene","Feature_Type","CGI_Coordinate")
   MCB_block=FALSE
   MCB_no=1
   total_res<-NULL
@@ -135,12 +136,19 @@ IdentifyMCB<-function(
     }
     if (MCB_block==TRUE&flag=="boundary"){
       MCB["end"] <- i
-      MCB["CpGs"]<- paste(rownames(correlation_res)[as.numeric(MCB["start"]):(as.numeric(MCB["end"]))],collapse = " ")
+      CpG_names<-rownames(correlation_res)[as.numeric(MCB["start"]):(as.numeric(MCB["end"]))]
+      MCB["CpGs"]<- paste(CpG_names,collapse = " ")
       MCB["location"]<-paste(met_cg_allgene[as.numeric(MCB["start"]),'chr'],":",
                                    met_cg_allgene[as.numeric(MCB["start"]),'pos'],"-",
                                    met_cg_allgene[as.numeric(MCB["end"]),'chr'],":",
                                    met_cg_allgene[as.numeric(MCB["end"]),'pos'],collapse = "")
       MCB["chromosomes"]<-met_cg_allgene[as.numeric(MCB["start"]),'chr']
+      MCB["MCB_Gene"]<-paste(unique(strsplit(paste(met_cg_allgene[CpG_names,'UCSC_RefGene_Name'],collapse = ";"),";")[[1]]),
+                               collapse = " ")
+      MCB["Feature_Type"]<-paste(unique(strsplit(paste(met_cg_allgene[CpG_names,'Relation_to_Island'],collapse = ";"),";")[[1]]),
+                                   collapse = " ")
+      MCB["CGI_Coordinate"]<-paste(unique(met_cg_allgene[CpG_names,'Islands_Name']),
+                                     collapse = ";")
       MCB["length"]<-as.numeric(met_cg_allgene[as.numeric(MCB["end"]),'pos'])-
         as.numeric(met_cg_allgene[as.numeric(MCB["start"]),'pos'])
       total_res<-rbind(total_res,MCB)
