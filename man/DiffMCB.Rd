@@ -9,6 +9,7 @@ DiffMCB(
   class_vector,
   mcb_matrix = NULL,
   min.cpgsize = 5,
+  pVals_num = 0.05,
   base_method = c("Fstat", "Tstat", "eBayes")[1],
   sec_method = c("ttest", "kstest")[1],
   ...
@@ -19,9 +20,11 @@ DiffMCB(
 
 \item{class_vector}{class vectors that indicated the groups.}
 
-\item{mcb_matrix}{p value threshold for the test.}
+\item{mcb_matrix}{dataframe or matrix results returned by IdentifyMCB function.}
 
 \item{min.cpgsize}{threshold for minimum CpGs must included in the individual MCBs.}
+
+\item{pVals_num}{p value threshold for the test.}
 
 \item{base_method}{base method used for calculation of differentially methylated regions,
 should be one of 'Fstat','Tstat','eBayes'. Defualt is Fstat.}
@@ -52,7 +55,7 @@ data('demo_survival_data', package = "EnMCB")
 data('demo_MCBinformation', package = "EnMCB")
 #Using survival censoring as group label just for demo, 
 #this may replace with disease and control group in real use.
-diffMCB_results <- DiffMCB(demo_data$realdata,demo_survival_data[,2], demo_MCBinformation)
+diffMCB_results <- DiffMCB(demo_data$realdata,demo_survival_data[,2], demo_MCBinformation, pVals_num = 1)
 
 }
 \references{
