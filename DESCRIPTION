@@ -1,7 +1,7 @@
 Package: EnMCB
 Type: Package
 Title: Predicting Disease Progression Based on Methylation Correlated Blocks using Ensemble Models
-Version: 1.7.3
+Version: 1.9.1
 Date: 2019-10-04
 Author: Xin Yu 
 Maintainer: Xin Yu <whirlsyu@gmail.com>
@@ -20,6 +20,7 @@ Suggests:
     knitr,
     plotROC,
     minfi,
+    limma,
     rmarkdown
 Description: Creation of the correlated blocks using DNA methylation profiles. 
     Machine learning models can be constructed to predict differentially methylated blocks and disease progression.

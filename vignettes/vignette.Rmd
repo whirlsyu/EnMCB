@@ -48,7 +48,7 @@ res<-IdentifyMCB(methylation_dataset)
 
 ```
 
-IdentfyMCB() function will calculated Pearson correlation coefficients between the any two CpGs. A value of Pearson correlation coefficients which under the threshold was used to identify boundaries between any two adjacent markers indicating uncorrelated methylation. Markers not separated by a boundary were combined into the MCB.You can extract the MCB information,
+IdentfyMCB() function will calculated Pearson correlation coefficients between the any two CpGs. A value of Pearson correlation coefficients which under the threshold was used to identify boundaries between any two adjacent markers indicating uncorrelated methylation. Markers not separated by a boundary were combined into the MCB. You can extract the MCB information with,
 
 
 ```{r echo=TRUE,warning=FALSE,results='hide'}
@@ -67,7 +67,20 @@ MCB<-MCB[MCB[,"CpGs_num"]>=5,]
 
 ```
 
-In order to build models, one may run following:
+In order to get differentially methylated blocks, one may run following:
+
+```{r echo=TRUE,warning=FALSE,results='hide'}
+#simulation for the group data
+groups = c(rep("control",200),rep("dis",255))
+
+DiffMCB_resutls<-DiffMCB(methylation_dataset,
+                         groups,
+                         MCB)$tab
+
+```
+
+
+In order to build survival models, one may run following:
 
 ```{r echo=TRUE,warning=FALSE,results='hide'}
 # sample the dataset into training set and testing set

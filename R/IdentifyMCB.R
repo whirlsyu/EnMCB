@@ -13,7 +13,8 @@
 #' @param method method used for calculation of correlation, \cr
 #' should be one of "pearson","spearman","kendall". Defualt is "pearson".
 #' @param PositionGap CpG Gap between any two CpGs positioned CpG sites less than 1000 bp (default) will be calculated.
-#' @param platform This parameter indicates the platform used to produce the methlyation profile.
+#' @param platform This parameter indicates the platform used to produce the methlyation profile. 
+#' You can use your own annotation file.
 #'
 #' @author Xin Yu
 #' @return
@@ -49,12 +50,17 @@ IdentifyMCB<-function(
   }
   cat("Start calculating the correlation, this may take a while...\n")
   FunctionResults<-list()
-  Illumina_Infinium_Human_Methylation_450K<-get450kAnno()
-  Illumina_Infinium_Human_Methylation_450K<-Illumina_Infinium_Human_Methylation_450K[!is.na(Illumina_Infinium_Human_Methylation_450K[,'pos']),]
-  
-  intersect_cpg<-intersect(rownames(Illumina_Infinium_Human_Methylation_450K),rownames(MethylationProfile))
-  
-  met_cg_allgene<-Illumina_Infinium_Human_Methylation_450K[intersect_cpg,]
+  if (platform == "Illumina Methylation 450K"){
+    Illumina_Infinium_Human_Methylation_450K<-get450kAnno()
+    Illumina_Infinium_Human_Methylation_450K<-Illumina_Infinium_Human_Methylation_450K[!is.na(Illumina_Infinium_Human_Methylation_450K[,'pos']),]
+    
+    intersect_cpg<-intersect(rownames(Illumina_Infinium_Human_Methylation_450K),rownames(MethylationProfile))
+    
+    met_cg_allgene<-Illumina_Infinium_Human_Methylation_450K[intersect_cpg,]
+  }else{
+    met_cg_allgene = platform
+  }
+
   MethylationProfile<-MethylationProfile[intersect_cpg,]
   
   chromosomes<-unique(met_cg_allgene[,'chr'])
@@ -114,8 +120,9 @@ IdentifyMCB<-function(
   MCBsites<-MCBsites[order(MCBsites)]
   FunctionResults$MCBsites<-rownames(MethylationProfile)[MCBsites]
 
-  MCB<-rep(NA,times=7)
-  names(MCB)<-c("MCB_no","start","end","CpGs","location","chromosomes","length")
+  MCB<-rep(NA,times=10)
+  names(MCB)<-c("MCB_no","start","end","CpGs","location","chromosomes",
+                "length","MCB_Gene","Feature_Type","CGI_Coordinate")
   MCB_block=FALSE
   MCB_no=1
   total_res<-NULL
@@ -129,12 +136,19 @@ IdentifyMCB<-function(
     }
     if (MCB_block==TRUE&flag=="boundary"){
       MCB["end"] <- i
-      MCB["CpGs"]<- paste(rownames(correlation_res)[as.numeric(MCB["start"]):(as.numeric(MCB["end"]))],collapse = " ")
+      CpG_names<-rownames(correlation_res)[as.numeric(MCB["start"]):(as.numeric(MCB["end"]))]
+      MCB["CpGs"]<- paste(CpG_names,collapse = " ")
       MCB["location"]<-paste(met_cg_allgene[as.numeric(MCB["start"]),'chr'],":",
                                    met_cg_allgene[as.numeric(MCB["start"]),'pos'],"-",
                                    met_cg_allgene[as.numeric(MCB["end"]),'chr'],":",
                                    met_cg_allgene[as.numeric(MCB["end"]),'pos'],collapse = "")
       MCB["chromosomes"]<-met_cg_allgene[as.numeric(MCB["start"]),'chr']
+      MCB["MCB_Gene"]<-paste(unique(strsplit(paste(met_cg_allgene[CpG_names,'UCSC_RefGene_Name'],collapse = ";"),";")[[1]]),
+                               collapse = " ")
+      MCB["Feature_Type"]<-paste(unique(strsplit(paste(met_cg_allgene[CpG_names,'Relation_to_Island'],collapse = ";"),";")[[1]]),
+                                   collapse = " ")
+      MCB["CGI_Coordinate"]<-paste(unique(met_cg_allgene[CpG_names,'Islands_Name']),
+                                     collapse = ";")
       MCB["length"]<-as.numeric(met_cg_allgene[as.numeric(MCB["end"]),'pos'])-
         as.numeric(met_cg_allgene[as.numeric(MCB["start"]),'pos'])
       total_res<-rbind(total_res,MCB)

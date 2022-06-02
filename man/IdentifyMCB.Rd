@@ -22,7 +22,8 @@ should be one of "pearson","spearman","kendall". Defualt is "pearson".}
 
 \item{PositionGap}{CpG Gap between any two CpGs positioned CpG sites less than 1000 bp (default) will be calculated.}
 
-\item{platform}{This parameter indicates the platform used to produce the methlyation profile.}
+\item{platform}{This parameter indicates the platform used to produce the methlyation profile. 
+You can use your own annotation file.}
 }
 \value{
 Object of class \code{list} with elements:

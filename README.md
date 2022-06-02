@@ -5,7 +5,7 @@ Type: Package
 
 Title: Predicting Disease Progression Based on Methylation Correlated Blocks using Ensemble Models
         
-Version: 1.3.1
+Version: 1.7.3
 
 Author: Xin Yu
 
@@ -16,15 +16,24 @@ Description: This package is designed to help you to create the methylation corr
 License: GPL-3
 
 Citation:
-Xin Yu et al. 2021 EnMCB: an R/Bioconductor package for Predicting Disease Progression Based on Methylation Correlated Blocks using Ensemble Models (under review)
+Xin Yu, De-Xin Kong, EnMCB: an R/bioconductor package for predicting disease progression based on methylation correlated blocks using ensemble models, Bioinformatics, 2021, btab415
 
 Note: This package is still under developing. Some of the functions may be further changed.
 
 Followings are brief instructions for using this package:
 
-You can install and test our package by downloading source package.
+You can install and our package via BiocManager as following or downloading source from github.
 
-First, you need a methylation data set, currently only most common platform 'Illumina Infinium Human Methylation 450K' is supported.
+<pre>
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("EnMCB")
+</pre>
+
+
+First, you need a methylation data set, currently only most common platform 'Illumina Infinium Human Methylation 450K' is supported. For other platform, for instance, BS sequencing data, users need to 
+introduce the annonation file for other own.
 
 You can use your own datasets:
 
@@ -35,8 +44,8 @@ eset_met<-some_methylation_datamatrix
 or use our demo data.
 
 <pre>
-data(demo_set)
-
+data('demo_data',package = "EnMCB")
+methylation_dataset<-demo_data$realdata
 </pre>
 
 
@@ -45,7 +54,8 @@ Then, you can automatically run following:
 <pre>
 library(SummarizedExperiment)
 
-res<-IdentifyMCB(assays(demo_set)[[1]])
+res<-IdentifyMCB(methylation_dataset)
+
 </pre>
 
 You can extract the MCB information,
@@ -60,15 +70,27 @@ and select some of MCBs for further modeling.
 
 <pre>
 
-MCB<-MCB[MCB[,"CpGs_num"]>2,]
+MCB<-MCB[MCB[,"CpGs_num"]>5,]
 
 </pre>
 
-In order to build models, one may run following:
+In order to get differentially methylated blocks, one may run following:
 
 <pre>
+#simulation for the group data
+groups = c(rep("control",200),rep("dis",255))
+
+diffMCB_results <- DiffMCB(methylation_dataset, groups, MCB)
+
+</pre>
+
+In order to build survival models, one may run following:
+
+<pre>
+data(demo_survival_data)
+survival_data <- demo_survival_data
 # sample the dataset into training set and testing set
-trainingset<-colnames(demo_set) %in% sample(colnames(demo_set),0.6*length(colnames(demo_set)))
+trainingset<-colnames(methylation_dataset) %in% sample(colnames(methylation_dataset),0.6*length(colnames(methylation_dataset)))
 
 testingset<-!trainingset
 

@@ -1,27 +1,36 @@
 #' @title  Differential expressed methylation correlated blocks
 #'
-#' @description This function is used to find the Methylation correlated blocks that differentially expressed between groups. 
+#' @description This function is used to find the Methylation correlated blocks that differentially expressed between groups based on the attractor framework. 
 #' This function calculates attractors of all the MCBs among the groups and find the attractor MCBs. \cr
 #'
-#' @details Currently, only illumina 450k platform is supported, the methylation profile need to convert into matrix format.
+#' @details Currently, only illumina 450k platform is supported. \cr
+#' If you want to use other platform, please provide the annotation file with CpG's chromosome and loci. \cr
+#' The methylation profile need to convert into matrix format.
 #'
-#' @param MCBs Methylation correlated blocks list.
-#' @param method method used for calculation of differential expression, \cr
-#' should be one of "attractors","t-test". Defualt is "attractors".
-#' @param p_value p value threshold for the test.
-#' @param min_CpGs threshold for minimum CpGs must included in the individual MCBs.
-#' @param platform This parameter indicates the platform used to produce the methlyation profile.
+#' @param methylation_matrix methylation profile matrix.
+#' @param class_vector class vectors that indicated the groups.
+#' @param mcb_matrix dataframe or matrix results returned by IdentifyMCB function.
+#' @param min.cpgsize threshold for minimum CpGs must included in the individual MCBs.
+#' @param pVals_num p value threshold for the test.
+#' @param base_method base method used for calculation of differentially methylated regions,
+#' should be one of 'Fstat','Tstat','eBayes'. Defualt is Fstat.
+#' @param sec_method secondly method in attractor framework, should be one of 'kstest','ttest'. Defualt is ttest.
+#' @param ... other parameters pass to the function.
 #'
 #' @author Xin Yu
 #' @return
 #' Object of class \code{list} with elements:
 #'  \tabular{ll}{
-#'    \code{MCBsites} \tab Character set contains all CpG sites in MCBs. \cr
-#'    \code{MCBinformation} \tab Matrix contains the information of results. \cr
+#'    \code{global} \tab Character set contains statistical value for all CpG sites in MCBs. \cr
+#'    \code{tab} \tab Matrix contains the information of results. \cr
 #'  }
 #' @examples
-#' data('demo_data',package = "EnMCB")
-#' 
+#' data('demo_data', package = "EnMCB")
+#' data('demo_survival_data', package = "EnMCB")
+#' data('demo_MCBinformation', package = "EnMCB")
+#' #Using survival censoring as group label just for demo, 
+#' #this may replace with disease and control group in real use.
+#' diffMCB_results <- DiffMCB(demo_data$realdata,demo_survival_data[,2], demo_MCBinformation, pVals_num = 1)
 #'
 #' @export
 #'
@@ -32,22 +41,23 @@
 DiffMCB<-function(
   methylation_matrix,
   class_vector, 
-  annotation, 
+  mcb_matrix = NULL, 
   min.cpgsize = 5,
-  base_method = c('Fstat','Tstat')[1], 
+  pVals_num = 0.05,
+  base_method = c('Fstat','Tstat','eBayes')[1], 
   sec_method = c('ttest','kstest')[1],
   ...
 ){
-  dat.fr <- methylation_matrix
+  if (is.matrix(methylation_matrix)) {
+    dat.fr <- methylation_matrix
+  } else {
+    warning("The input parameter methylation_matrix must be a matrix. \n
+            Now converting it into matrix.\n")
+  }
   all.probes <- rownames(dat.fr)
   dat.fr <- as.matrix(dat.fr)
   class.vector <- as.factor(class_vector)
-  
-  Illumina_Infinium_Human_Methylation_450K<-get450kAnno()
-  Illumina_Infinium_Human_Methylation_450K<-Illumina_Infinium_Human_Methylation_450K[!is.na(Illumina_Infinium_Human_Methylation_450K[,'pos']),]
-  intersect_cpg<-intersect(rownames(Illumina_Infinium_Human_Methylation_450K),rownames(methylation_matrix))
-  annotation<-Illumina_Infinium_Human_Methylation_450K[intersect_cpg,]
-  
+  annotation <- mcb_matrix
   all_included <- strsplit(paste(annotation[,'CpGs'],collapse = ' ')," ")[[1]]
   probes.hits <- intersect(all.probes, all_included)
   dat.detect.w <- dat.fr[rownames(dat.fr) %in% probes.hits,]
@@ -83,7 +93,7 @@ DiffMCB<-function(
     res$global <- tstat
     tstat <- log(abs(tstat), 2)
     t.pvals <- apply(incidence.matrix, 1, evalMCB, global = tstat,sec_method=sec_method)
-  }else if(base_method=='LIMMA'){
+  }else if(base_method=='eBayes'){
     design<-model.matrix(~class.vector)
     fitlim<-limma::lmFit(dat.detect.w,design)
     fiteb<-limma::eBayes(fitlim)
@@ -108,6 +118,7 @@ DiffMCB<-function(
                     NumberDetectedCpGs = size)
   #rownames(tab)<-sapply(X = rownames(tab),FUN = function(x){strsplit(x, "_")[[1]][2]})
   tab <- tab[order(t.pvals[2,]), ]
+  tab <- subset(tab, AdjustedPvalues<=pVals_num)
   res$tab<-tab
   return(res)
 }
