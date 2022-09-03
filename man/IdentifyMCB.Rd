@@ -9,7 +9,8 @@ IdentifyMCB(
   method = c("pearson", "spearman", "kendall")[1],
   CorrelationThreshold = 0.8,
   PositionGap = 1000,
-  platform = "Illumina Methylation 450K"
+  platform = "Illumina Methylation 450K",
+  verbose = T
 )
 }
 \arguments{
@@ -24,6 +25,8 @@ should be one of "pearson","spearman","kendall". Defualt is "pearson".}
 
 \item{platform}{This parameter indicates the platform used to produce the methlyation profile. 
 You can use your own annotation file.}
+
+\item{verbose}{True as default, which will print the block information for each chromosome.}
 }
 \value{
 Object of class \code{list} with elements:

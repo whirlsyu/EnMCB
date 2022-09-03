@@ -15,6 +15,7 @@
 #' @param PositionGap CpG Gap between any two CpGs positioned CpG sites less than 1000 bp (default) will be calculated.
 #' @param platform This parameter indicates the platform used to produce the methlyation profile. 
 #' You can use your own annotation file.
+#' @param verbose True as default, which will print the block information for each chromosome. 
 #'
 #' @author Xin Yu
 #' @return
@@ -42,8 +43,8 @@ IdentifyMCB<-function(
   method=c("pearson","spearman","kendall")[1],
   CorrelationThreshold = 0.8,
   PositionGap = 1000,
-  platform = "Illumina Methylation 450K"
-
+  platform = "Illumina Methylation 450K",
+  verbose = T
 ){
   if (!(method %in% c("pearson","spearman","kendall"))) {
     stop(paste("Correlation method should be one of pearson, spearman and kendall."))
@@ -159,13 +160,16 @@ IdentifyMCB<-function(
   rownames(total_res)<-total_res[,'MCB_no']
   #Some of 'cgxxxxx' code point to same CpG, those cg-code are removed.
   total_res<-total_res[as.numeric(total_res[,'length'])>1,]
-  cat("Statistics (",nrow(total_res)," MCBs in total):\n")
-  for (chr_set in unique(total_res[,'chromosomes'])) {
-    cat(chr_set,": ")
-    cat("total MCBs:",length(total_res[total_res[,'chromosomes'] %in% chr_set,'chromosomes'])," ")
-    cat("Mean Length:",mean(as.numeric(total_res[total_res[,'chromosomes'] %in% chr_set,'length']))," ")
-    cat("(Range: ",range(as.numeric(total_res[total_res[,'chromosomes'] %in% chr_set,'length'])),")\n")
+  if (verbose) {
+    cat("Statistics (",nrow(total_res)," MCBs in total):\n")
+    for (chr_set in unique(total_res[,'chromosomes'])) {
+      cat(chr_set,": ")
+      cat("total MCBs:",length(total_res[total_res[,'chromosomes'] %in% chr_set,'chromosomes'])," ")
+      cat("Mean Length:",mean(as.numeric(total_res[total_res[,'chromosomes'] %in% chr_set,'length']))," ")
+      cat("(Range: ",range(as.numeric(total_res[total_res[,'chromosomes'] %in% chr_set,'length'])),")\n")
+    }
   }
+
   FunctionResults$MCBinformation<-total_res
   return(FunctionResults)
 }
