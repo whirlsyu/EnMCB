@@ -18,5 +18,5 @@ utils::globalVariables(c('FPF','TPF','aes','chr_id','coef','coord_cartesian','do
                          'element_blank','element_line','foreach','geom_abline','geom_roc','ggplot','rnorm',
                          'ggplot2','ggsave','groups','median','new','parallel','pheatmap','plot','demo_data',
                          'prediction','prognosticROC','qnorm','style_roc','survivalROC','theme','boot','boot.ci',
-                         'theme_grey','theme_light'))
+                         'AdjustedPvalues','theme_grey','theme_light'))
 
