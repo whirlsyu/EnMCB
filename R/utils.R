@@ -169,7 +169,7 @@ makeEset<-function(met_matrix,cli_data){
 
 
 multiple_time_ROC <- function(Test,y_surv,genesel) {
-  requireNamespace("prognosticROC") #version 0.7
+  #requireNamespace("prognosticROC") #version 0.7
   sroclong_all<-NULL
   for (n_time in c(3,5,7)) {
     ROC_res= survivalROC::survivalROC(Stime=y_surv[,1],
@@ -254,7 +254,7 @@ plot_ROC<-function(perf){
 }
 
 ROC_mutiple_clinical<-function(test_frame,y_surv,genesel="title",ntime=5){
-    requireNamespace("prognosticROC") #version 0.7
+    #requireNamespace("prognosticROC") #version 0.7
     sroclong_all<-NULL
     for (n in seq_len(ncol(test_frame))) {
       ROC_res= survivalROC::survivalROC(Stime=y_surv[,1],
@@ -294,7 +294,7 @@ ROCdata_save<-function(origin=NULL,perf,mark="none"){
 
 mutiple_time_ROC <- function(Test,y_surv,genesel) {
   requireNamespace(survivalROC) #version 1.0.3
-  requireNamespace(prognosticROC) #version 0.7
+  #requireNamespace(prognosticROC) #version 0.7
   sroclong_all<-NULL
   for (n_time in c(3,5,7)) {
     ROC_res= survivalROC::survivalROC(Stime=y_surv[,1],

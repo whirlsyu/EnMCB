@@ -30,7 +30,9 @@
 #' data('demo_MCBinformation', package = "EnMCB")
 #' #Using survival censoring as group label just for demo, 
 #' #this may replace with disease and control group in real use.
-#' diffMCB_results <- DiffMCB(demo_data$realdata,demo_survival_data[,2], demo_MCBinformation, pVals_num = 1)
+#' diffMCB_results <- DiffMCB(demo_data$realdata,demo_survival_data[,2], 
+#'                            demo_MCBinformation,
+#'                            pVals_num = 1)
 #'
 #' @export
 #'
