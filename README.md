@@ -5,7 +5,7 @@ Type: Package
 
 Title: Predicting Disease Progression Based on Methylation Correlated Blocks using Ensemble Models
         
-Version: 1.7.3
+Version: 1.11.1
 
 Author: Xin Yu
 
