@@ -109,8 +109,10 @@ IdentifyMCB<-function(
     rownames(res)<-rownames(met_matrix)
     correlation_res<-rbind(correlation_res,res)
   }
-  cat("\n")
-  cat("Now gathering the results, please wait ...\n")
+  if (verbose) {
+    cat("\n")
+    cat("Now gathering the results, please wait ...\n")
+  }
   met_cg_allgene<-met_cg_allgene[rownames(correlation_res),]
   MCB_flag<-rep("boundary",nrow(correlation_res))
   if (method == "pearson") MCB_flag[as.numeric(correlation_res[,'estimate.cor'])>CorrelationThreshold]<-"MCB"
@@ -169,7 +171,6 @@ IdentifyMCB<-function(
       cat("(Range: ",range(as.numeric(total_res[total_res[,'chromosomes'] %in% chr_set,'length'])),")\n")
     }
   }
-
   FunctionResults$MCBinformation<-total_res
   return(FunctionResults)
 }
