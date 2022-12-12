@@ -1116,6 +1116,14 @@ vector_to_matrix<-function(x){
   mat
 }
 
+fisher_combine_p<-function (p,...) 
+{
+  k <- length(p)
+  adjust <- "none"
+  statistic <- -2 * sum(log(p))
+  pval <- pchisq(statistic, df = 2 * k, lower.tail = FALSE)
+  return(pval)
+}
 
 
 # end load

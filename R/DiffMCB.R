@@ -80,19 +80,31 @@ DiffMCB<-function(
     }
     return(c(res$statistic, res$p.value))
   }
+  evalp <- function(index, global) {
+    return(fisher_combine_p(global[index == 1]))
+  }
+  
   res<-list()
   if (base_method=='Fstat'){
     fstat <- apply(dat.detect.w, 1, function(y, x) {
-      anova(lm(y ~ x))[[4]][1]
+      return(anova(lm(y ~ x))[[4]][1])
+    }, x = class.vector)
+    stat_p <- apply(dat.detect.w, 1, function(y, x) {
+      return(anova(lm(y ~ x))[[5]][1])
     }, x = class.vector)
     res$global <- fstat
+    stat_p<-apply(incidence.matrix, 1, evalp, global = stat_p)
     fstat <- log(fstat, 2)
     t.pvals <- apply(incidence.matrix, 1, evalMCB, global = fstat,sec_method=sec_method)
   }else if (base_method=='Tstat'){
     tstat <- apply(dat.detect.w, 1, function(y, x) {
       t.test(y ~ x)$statistic
     }, x = class.vector)
+    stat_p <- apply(dat.detect.w, 1, function(y, x) {
+      t.test(y ~ x)$p.value
+    }, x = class.vector)
     res$global <- tstat
+    stat_p<-apply(incidence.matrix, 1, evalp, global = stat_p)
     tstat <- log(abs(tstat), 2)
     t.pvals <- apply(incidence.matrix, 1, evalMCB, global = tstat,sec_method=sec_method)
   }else if(base_method=='eBayes'){
@@ -102,13 +114,20 @@ DiffMCB<-function(
     DEG<-limma::topTable(fiteb,coef=length(unique(class.vector)),n=nrow(dat.detect.w),p.value=1)
     DEG<-DEG[rownames(dat.detect.w),]
     tstat<-DEG$t
+    stat_p<-apply(incidence.matrix, 1, evalp, global = DEG$adj.P.Val)
     res$global <- tstat
     tstat <- log(abs(tstat), 2)
     t.pvals <- apply(incidence.matrix, 1, evalMCB, global = tstat, sec_method=sec_method)
+ 
   }else{
     stop('The method indicator base_method is invalid.')
   }
-  t.pvals_adjust <- p.adjust(as.numeric(t.pvals[2,]), "BH")
+  if (exists("stat_p")){
+    t.pvals_combine <- apply(data.frame(t.pvals[2,],stat_p), 1, fisher_combine_p)
+    t.pvals_adjust <- p.adjust(as.numeric(t.pvals_combine), "BH")
+  }else{
+    t.pvals_adjust <- p.adjust(as.numeric(t.pvals[2,]), "BH")
+  }
   ##cat(dim(t.pvals))
   
   size <- apply(incidence.matrix, 1, sum)
