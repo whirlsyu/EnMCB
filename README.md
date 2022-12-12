@@ -18,7 +18,6 @@ License: GPL-3
 Citation:
 Xin Yu, De-Xin Kong, EnMCB: an R/bioconductor package for predicting disease progression based on methylation correlated blocks using ensemble models, Bioinformatics, 2021, btab415
 
-Note: This package is still under developing. Some of the functions may be further changed.
 
 Followings are brief instructions for using this package:
 
