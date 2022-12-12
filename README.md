@@ -9,7 +9,7 @@ Version: 1.11.1
 
 Author: Xin Yu
 
-Maintainer: Xin Yu <whirlsyu@gmail.com> <yuxin@webmail.hzau.edu.cn>
+Maintainer: Xin Yu <whirlsyu@gmail.com> <yuxin@qlnu.edu.cn>
 
 Description: This package is designed to help you to create the methylation correlated blocks using methylation profiles. A stacked ensemble of machine learning models, which combined the Cox regression, support vector regression, Coxboost and elastic-net regression model, can be constructed using this package. You also can choose one of them to build DNA methylation signatures associated with disease progression (survival).
 
