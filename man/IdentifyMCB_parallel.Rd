@@ -50,7 +50,7 @@ data('demo_data',package = "EnMCB")
 
 #import the demo TCGA data with 10000+ CpGs site and 455 samples
 #remove # to run
-res<-IdentifyMCB_p(demo_data$realdata)
+res<-IdentifyMCB_parallel(demo_data$realdata)
 demo_MCBinformation<-res$MCBinformation
 
 
