@@ -67,7 +67,7 @@ IdentifyMCB_parallel<-function(
   chromosomes<-unique(met_cg_allgene[,'chr'])
   chromosomes<-chromosomes[order(chromosomes)]
   correlation_res<-NULL
-  cat("(or you can try to use IdentifyMCB_parallel function instead)\n")
+  cat("(using parallel function ...)\n")
   if (length(chromosomes)>1) {
     bar<-utils::txtProgressBar(min = 1,max = length(chromosomes),char = "#",style = 3)
   }
