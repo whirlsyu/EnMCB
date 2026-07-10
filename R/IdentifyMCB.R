@@ -44,14 +44,14 @@ IdentifyMCB<-function(
   CorrelationThreshold = 0.8,
   PositionGap = 1000,
   platform = "Illumina Methylation 450K",
-  verbose = T
+  verbose = TRUEchromosomes <- chromosomes[gtools::mixedorder(chromosomes)]
 ){
   if (!(method %in% c("pearson","spearman","kendall"))) {
     stop(paste("Correlation method should be one of pearson, spearman and kendall."))
   }
-  cat("Start calculating the correlation, this may take a while...\n")
+  if (verbose) cat("Start calculating the correlation, this may take a while...\n")
   FunctionResults<-list()
-  if (platform == "Illumina Methylation 450K"){
+  if (identical(platform, "Illumina Methylation 450K")){
     Illumina_Infinium_Human_Methylation_450K<-get450kAnno()
     Illumina_Infinium_Human_Methylation_450K<-Illumina_Infinium_Human_Methylation_450K[!is.na(Illumina_Infinium_Human_Methylation_450K[,'pos']),]
     
@@ -59,53 +59,69 @@ IdentifyMCB<-function(
     
     met_cg_allgene<-Illumina_Infinium_Human_Methylation_450K[intersect_cpg,]
   }else{
-    met_cg_allgene = platform
+    intersect_cpg<-intersect(rownames(platform),rownames(MethylationProfile))
+    met_cg_allgene<-platform[intersect_cpg,]
   }
 
   MethylationProfile<-MethylationProfile[intersect_cpg,]
   
   chromosomes<-unique(met_cg_allgene[,'chr'])
-  chromosomes<-chromosomes[order(chromosomes)]
-  res=NULL
+  # Natural sort: extract numeric part so chr2 < chr10; non-numeric (X, Y, M)
+  # sort after numerics. Works with or without the "chr" prefix.
+  chromosomes<-chromosomes[order(
+    suppressWarnings(as.integer(gsub("[^0-9]", "", chromosomes))),
+    chromosomes,
+    na.last = TRUE
+  )]
   correlation_res<-NULL
-  cat("(or you can try to use IdentifyMCB_parallel function instead)\n")
-  if (length(chromosomes)>1) {
+  if (verbose) cat("(or you can try to use IdentifyMCB_parallel function instead)\n")
+  # Pre-compute method-specific constants once, outside all loops.
+  # Column names mirror what unlist(cor.test(...))[1:5] produces per method.
+  # The boundary row marks pairs that are too far apart or at chromosome ends;
+  # its estimate slot is 0 so it never exceeds CorrelationThreshold.
+  col_names <- switch(method,
+    "pearson"  = c("statistic.t", "parameter.df", "p.value",
+                   "estimate.cor", "null.value.correlation"),
+    "spearman" = c("statistic.S", "p.value", "estimate.rho",
+                   "null.value.rho", "alternative"),
+    "kendall"  = c("statistic.z", "p.value", "estimate.tau",
+                   "null.value.tau", "alternative")
+  )
+  boundary_row <- setNames(
+    if (method == "pearson") c(0, 0, 1, 0, 0) else c(0, 1, 0, 0, 0),
+    col_names
+  )
+  if (verbose && length(chromosomes)>1) {
     bar<-utils::txtProgressBar(min = 1,max = length(chromosomes),char = "#",style = 3)
   }
   for(chr_no in seq_along(chromosomes)){
-    if (length(chromosomes)>1) {
+    if (verbose && length(chromosomes)>1) {
       utils::setTxtProgressBar(bar, chr_no)
     }
     chr_id<-chromosomes[chr_no]
-    met_x<-MethylationProfile
     if (sum(met_cg_allgene[,'chr'] %in% chr_id)<=2) {
       next
     }
-    met_matrix<-met_x[met_cg_allgene[,'chr'] %in% chr_id,]
+    met_matrix<-MethylationProfile[met_cg_allgene[,'chr'] %in% chr_id,]
     ann_matrix<-met_cg_allgene[met_cg_allgene[,'chr'] %in% chr_id,]
     met_matrix<-met_matrix[order(as.numeric(ann_matrix[,'pos']),decreasing = FALSE),]
     ann_matrix<-ann_matrix[order(as.numeric(ann_matrix[,'pos']),decreasing = FALSE),]
-    res<-NULL
     total<-nrow(met_matrix)
+    # Collect one named vector per CpG into a list, then bind once.
+    # This avoids O(n²) memory re-allocation from incremental rbind.
+    res <- vector("list", total)
     for (i in seq_len(total)) {
-      # To investigate whether this indeed is evident in our data, we calculated Pearson
-      # correlation coefficients between beta values of any two CpGs positioned within
-      # one kilobase (or indicated by PositionGap) of one another
-      if (i+1<=total){
-        if(as.numeric(ann_matrix[i+1,'pos'])-as.numeric(ann_matrix[i,'pos'])<PositionGap &
-           ann_matrix[i+1,'chr']==ann_matrix[i,'chr']){
-          res<-rbind(res,c(unlist(stats::cor.test(met_matrix[i,],met_matrix[i+1,],method = method))[1:5]))
-        }else{
-          if (method == "pearson") res<-rbind(res,matrix(c(0,0,1,0,0),1,5))
-          else if (method == "spearman") res<-rbind(res,matrix(c(0,1,0,0,0),1,5))
-          else if (method == "kendall") res<-rbind(res,matrix(c(0,1,0,0,0),1,5))
-        }
-      }else{
-        if (method == "pearson") res<-rbind(res,matrix(c(0,0,1,0,0),1,5))
-        else if (method == "spearman") res<-rbind(res,matrix(c(0,1,0,0,0),1,5))
-        else if (method == "kendall") res<-rbind(res,matrix(c(0,1,0,0,0),1,5))
+      # Calculate Pearson correlation coefficients between beta values of any
+      # two CpGs positioned within one kilobase (or PositionGap) of one another.
+      if (i + 1 <= total &&
+          as.numeric(ann_matrix[i+1,'pos']) - as.numeric(ann_matrix[i,'pos']) < PositionGap &&
+          ann_matrix[i+1,'chr'] == ann_matrix[i,'chr']) {
+        res[[i]] <- unlist(stats::cor.test(met_matrix[i,], met_matrix[i+1,], method = method))[1:5]
+      } else {
+        res[[i]] <- boundary_row
       }
     }
+    res <- do.call(rbind, res)
     rownames(res)<-rownames(met_matrix)
     correlation_res<-rbind(correlation_res,res)
   }
@@ -121,7 +137,7 @@ IdentifyMCB<-function(
   # This CpGs and next one are included.
   MCBsites<-union(grep("MCB",MCB_flag),grep("MCB",MCB_flag)+1)
   MCBsites<-MCBsites[order(MCBsites)]
-  FunctionResults$MCBsites<-rownames(MethylationProfile)[MCBsites]
+  FunctionResults$MCBsites<-rownames(correlation_res)[MCBsites]
 
   MCB<-rep(NA,times=10)
   names(MCB)<-c("MCB_no","start","end","CpGs","location","chromosomes",
@@ -156,6 +172,7 @@ IdentifyMCB<-function(
         as.numeric(met_cg_allgene[as.numeric(MCB["start"]),'pos'])
       total_res<-rbind(total_res,MCB)
       MCB_block = FALSE
+      MCB[] <- NA  # reset all fields so no stale values bleed into the next block
     }
   }
   total_res<-cbind(total_res,CpGs_num=as.numeric(total_res[,'end'])-as.numeric(total_res[,'start'])+1)
