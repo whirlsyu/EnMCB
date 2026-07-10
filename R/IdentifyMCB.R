@@ -44,7 +44,7 @@ IdentifyMCB<-function(
   CorrelationThreshold = 0.8,
   PositionGap = 1000,
   platform = "Illumina Methylation 450K",
-  verbose = TRUEchromosomes <- chromosomes[gtools::mixedorder(chromosomes)]
+  verbose = TRUE
 ){
   if (!(method %in% c("pearson","spearman","kendall"))) {
     stop(paste("Correlation method should be one of pearson, spearman and kendall."))
