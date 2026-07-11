@@ -10,7 +10,7 @@ IdentifyMCB(
   CorrelationThreshold = 0.8,
   PositionGap = 1000,
   platform = "Illumina Methylation 450K",
-  verbose = T
+  verbose = TRUE
 )
 }
 \arguments{
